@@ -1,5 +1,8 @@
 import pandas as pd
+import csv
+import json
 
+#checking my data for missing data (API didn't return anything for some songs)
 def check_for_missing_data():
     top_100_df = pd.read_csv('data/charts.csv')
 
@@ -21,6 +24,7 @@ def check_for_missing_data():
     for index, data in missing_data.iterrows():
         print(str(data['date']) + "," + str(data['rank']) + "," + data['song'] + "," + data['artist'] + "," + str(data['last-week']) + "," + str(data['peak-rank']) + "," + str(data['weeks-on-board']) + "2")
 
+#merging our data collection
 def merge_csvs():
     #Some code to run later once all 3 of us have gotten our data
     #this chunk will take all of the data we have after collection, and combine it into 1 legible file.
@@ -39,7 +43,7 @@ def merge_csvs():
 
     df1 = pd.read_csv('data/nicoledata.csv')
     df1['date'] = pd.to_datetime(df1['date'])
-    df2 = pd.read_csv('data/Livdata.csv')
+    df2 = pd.read_csv('data/livdata.csv')
     df2['date'] = pd.to_datetime(df2['date'])
     df3 = pd.read_csv('data/karenadata.csv')
     df3['date'] = pd.to_datetime(df3['date'])
@@ -51,6 +55,30 @@ def merge_csvs():
     combined_df = combined_df.sort_values(by='date')
     
     # Write the combined dataframe to a CSV file
-    combined_df.to_csv('combined_output.csv', index=False)
+    combined_df.to_csv('data/combined_data.csv', index=False)
+
+#function to convert csv to json
+def csv_to_json(csv_file_path, json_file_path):
+    
+    data = []
+    
+    with open(csv_file_path, mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            filtered_row = {
+                "date": row["date"],    # Replace with actual column names in your CSV
+                "rank": row["rank"],    # Replace with actual column names in your CSV
+                "label": row["label"]    # Replace with actual column names in your CSV
+            }
+            data.append(filtered_row)  # Add filtered row to the data list
+    
+    with open(json_file_path, mode='w') as json_file:
+        json.dump(data, json_file, indent=4) 
 
 
+# Function to convert and map labels
+def convert_labels(df):
+    label_mapping = {0: 'sad', 1: 'happy', 2: 'energetic', 3: 'calm'}
+    # Map numeric labels to text labels
+    df['label'] = df['label'].replace(label_mapping)
+    return df
