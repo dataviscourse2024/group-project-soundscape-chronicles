@@ -1,4 +1,5 @@
-// Constants for the charts, that would be useful.
+// CHATGPT wrote all of our JDOC function headers
+
 const CHART_WIDTH = 650;
 const CHART_HEIGHT = 400;
 const MARGIN = { left: 70, bottom: 40, top: 20, right: 20 };
@@ -6,20 +7,20 @@ const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
 
-let SvgLineChart,
-  SvgBarChart,
-  SvgPieChart,
-  SvgFilledLinePlot,
-  SvgCircle,
-  SvgStackedBar;
+let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar;
 
 const emotionColors = {
-  happy: "#FF0000",
-  energetic: "#00FF00",
-  calm: "#0000FF",
-  sad: "#FFFF00",
+  happy: "#D55E00",
+  energetic: "#CC79A7",
+  calm: "#009E73",
+  sad: "#0072B2",
 };
 
+/**
+ * Sets up the charts and processes data for each chart type.
+ * @async
+ * @function setup
+ */
 setup();
 
 async function setup() {
@@ -27,13 +28,7 @@ async function setup() {
   SvgLineChart = createChartSVG("#Linechart-div");
 
   //Barchart-div
-  SvgBarChart = createChartSVG("#Barchart-div");
-
-  //Piechart-div
-  SvgPieChart = createChartSVG("#Piechart-div");
-
-  //Filledlineplot-div
-  SvgFilledLinePlot = createChartSVG("#Filledlineplot-div");
+  SvgRankLineChart = createChartSVG("#rankLineChart-div");
 
   //Circle-div
   SvgCircle = createChartSVG("#Circle-div");
@@ -41,27 +36,55 @@ async function setup() {
   //Stackedbar-div
   SvgStackedBar = createChartSVG("#Stackedbar-div");
 
-  let combined_data = await loadData();
+  let combinedData = await loadData();
 
-  //line chart stuff
-  let line_chart_data = await lineChartProcessData(combined_data);
-  updateLineChart(line_chart_data);
+  //line chart
+  let lineChartData = await lineChartProcessData(combinedData);
+  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false);
 
-  //circle chart stuff
-  let circle_chart_data = await circleChartProcessData(combined_data);
-  console.log(circle_chart_data);
-  const years = circle_chart_data.map((d) => d.year);
-  sliderForCircleChart(
-    circle_chart_data,
-    Math.min(...years),
-    Math.max(...years)
+  //circle chart
+  let circleChartData = await circleChartProcessData(combinedData);
+  createSliderForCircleChart(circleChartData);
+  updateCircleChart(
+    circleChartData,
+    Math.min(...circleChartData.map((d) => d.year))
   );
-  updateCircleChart(circle_chart_data, Math.min(...years));
-  updateStackedBarChart(circle_chart_data);
+
+  //stacked bar chart
+  let stackBarChartData = await stackedBarChartProcessData(combinedData);
+  updateStackedBarChart(stackBarChartData);
+
+  //rank line chart
+  let rankLineData = await rankLineChartProcessData(combinedData);
+  updateLineChart(
+    rankLineData,
+    SvgRankLineChart,
+    "Average Rank",
+    (flip_y = true)
+  );
+
+  //legend - chatgpt helped with this
+  const legendContainer = d3.select("#legend");
+  const legend = legendContainer.append("div").attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const legendItem = legend.append("div").attr("class", "legend-item");
+    legendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    legendItem.append("span").text(key);
+  }
 }
 
+/**
+ * Creates an SVG element for a chart within a specified div.
+ * @function createChartSVG
+ * @param {string} chartId - The ID of the div element to append the SVG to.
+ * @returns {Object} - The created SVG element.
+ */
 function createChartSVG(chartId) {
-  console.log("Creating chart SVG for", chartId);
   return d3
     .select(chartId)
     .append("svg")
@@ -71,11 +94,36 @@ function createChartSVG(chartId) {
     .attr("transform", "translate(" + MARGIN.left + "," + MARGIN.top + ")");
 }
 
+/**
+ * creating slider for circle chart and adding listener for updates
+ * @param {Array} data - The data to update circle chart with
+ */
+function createSliderForCircleChart(data) {
+  const years = data.map((d) => d.year);
+  let slider = document.getElementById("circle-slider");
+  const min = Math.min(...years);
+  slider.min = min;
+  slider.max = Math.max(...years);
+  slider.value = min;
+  document.getElementById("circle-label").innerText = min;
+  document.getElementById("circle-slider").value = min;
+  slider.addEventListener("input", function () {
+    document.getElementById("circle-label").innerText = this.value;
+    updateCircleChart(data, this.value);
+  });
+}
+
+/**
+ * Loads JSON data from a specified file.
+ * @async
+ * @function loadData
+ * @returns {Promise<Object>} - Returns a Promise with the loaded JSON data.
+ */
 async function loadData() {
   return fetch("data/combined_data.json")
     .then((response) => {
       if (!response.ok) {
-        throw new Error("Error fetching the data");
+        throw new Error("Error fetching the data - no response");
       }
       return response.json();
     })
@@ -88,37 +136,15 @@ async function loadData() {
     });
 }
 
-async function lineChartProcessData(data) {
-  console.log("processing data for line chart");
-  let emotionTotals = {};
-  data.forEach((d) => {
-    const date = new Date(d.date);
-    const year = date.getFullYear();
-    const label = d.label;
-    if (!emotionTotals[year]) {
-      emotionTotals[year] = {};
-      emotionTotals[year]["happy"] = 0;
-      emotionTotals[year]["sad"] = 0;
-      emotionTotals[year]["energetic"] = 0;
-      emotionTotals[year]["calm"] = 0;
-    }
-    emotionTotals[year][label] = emotionTotals[year][label] + 1;
-  });
-  console.log(emotionTotals);
-  const musicTypeCount = [];
-  for (const year in emotionTotals) {
-    for (const label in emotionTotals[year]) {
-      musicTypeCount.push({
-        year: year,
-        label: label,
-        count: emotionTotals[year][label],
-      });
-    }
-  }
-  return musicTypeCount;
-}
-
-function updateLineChart(data) {
+/**
+ * Updates a line chart with provided data.
+ * @function updateLineChart
+ * @param {Array} data - The data to display in the line chart.
+ * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {string} y_axis_label - Label for the y-axis.
+ * @param {boolean} flip_y - Whether to invert the y-axis scale.
+ */
+function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   //copilot helped me with this
@@ -128,32 +154,40 @@ function updateLineChart(data) {
     .range([0, INNER_WIDTH]);
 
   //copilot helped me with this
-  let yScale = d3
-    .scaleLinear()
-    .domain([0, d3.max(data, (d) => d.count)])
-    .range([INNER_HEIGHT, 0]);
+  let yScale;
+  if (flip_y) {
+    yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.count)])
+      .range([0, INNER_HEIGHT]);
+  } else {
+    yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.count)])
+      .range([INNER_HEIGHT, 0]);
+  }
 
   const lineGenerator = d3
     .line()
     .x((d) => xScale(d.year))
     .y((d) => yScale(d.count));
 
-  SvgLineChart.selectAll("*").remove();
+  SvgChart.selectAll("*").remove();
 
   //apending axis
-  SvgLineChart.append("g")
+  SvgChart.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
     .call(d3.axisBottom(xScale).ticks(data.length));
 
-  SvgLineChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
+  SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
-    console.log(`Emotion: ${emotion}`, emotionData); // Debugging line
+
     //creating line
-    SvgLineChart.append("path")
+    SvgChart.append("path")
       .datum(emotionData)
       .attr("class", "line")
       .attr("fill", "none")
@@ -165,26 +199,27 @@ function updateLineChart(data) {
   }
 
   //adding axis labels
-  SvgLineChart.append("text")
+  SvgChart.append("text")
     .attr("text-anchor", "middle")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
-  SvgLineChart.append("text")
+  SvgChart.append("text")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
-    .text("Song Emotion Count");
-  //dynamically changing the header
-  document.getElementById(
-    "line-chart-header"
-  ).innerText = `Line Chart - Song Emotion Count`;
+    .text(y_axis_label);
 }
 
+/**
+ * Updates the circle chart with data for a specified year.
+ * @function updateCircleChart
+ * @param {Array} data - The data to display in the circle chart.
+ * @param {number} value - The year to display in the circle chart.
+ */
 function updateCircleChart(data, value) {
   SvgCircle.selectAll("*").remove();
-  console.log("updating circle chart with value", value);
 
   //copilot helped with this
   const circle_coors = [
@@ -215,8 +250,100 @@ function updateCircleChart(data, value) {
   });
 }
 
+/**
+ * Processes data for the line chart by calculating yearly emotion counts.
+ * @async
+ * @function lineChartProcessData
+ * @param {Array} data - The raw data to process.
+ * @returns {Promise<Array>} - Returns a Promise with the processed data for the line chart.
+ */
+async function lineChartProcessData(data) {
+  let emotionTotals = {};
+  data.forEach((d) => {
+    const date = new Date(d.date);
+    const year = date.getFullYear();
+    const label = d.label;
+    if (!emotionTotals[year]) {
+      emotionTotals[year] = {};
+      emotionTotals[year]["happy"] = 0;
+      emotionTotals[year]["sad"] = 0;
+      emotionTotals[year]["energetic"] = 0;
+      emotionTotals[year]["calm"] = 0;
+    }
+    emotionTotals[year][label] = emotionTotals[year][label] + 1;
+  });
+  const musicTypeCount = [];
+  for (const year in emotionTotals) {
+    for (const label in emotionTotals[year]) {
+      musicTypeCount.push({
+        year: year,
+        label: label,
+        count: emotionTotals[year][label],
+      });
+    }
+  }
+  return musicTypeCount;
+}
+
+/**
+ * Processes data for the rank line chart by calculating yearly average ranks.
+ * @async
+ * @function rankLineChartProcessData
+ * @param {Array} data - The raw data to process.
+ * @returns {Promise<Array>} - Returns a Promise with the processed data for the rank line chart.
+ */
+async function rankLineChartProcessData(data) {
+  let emotionRankTotals = {};
+  let yearTotal = {};
+  data.forEach((d) => {
+    const date = new Date(d.date);
+    const year = date.getFullYear();
+    const label = d.label;
+    if (!emotionRankTotals[year]) {
+      emotionRankTotals[year] = {};
+      emotionRankTotals[year]["happy"] = 0;
+      emotionRankTotals[year]["sad"] = 0;
+      emotionRankTotals[year]["energetic"] = 0;
+      emotionRankTotals[year]["calm"] = 0;
+    }
+    if (!yearTotal[year]) {
+      yearTotal[year] = {};
+      yearTotal[year]["happy"] = 0;
+      yearTotal[year]["sad"] = 0;
+      yearTotal[year]["energetic"] = 0;
+      yearTotal[year]["calm"] = 0;
+    }
+    yearTotal[year][label] = yearTotal[year][label] + 1;
+    emotionRankTotals[year][label] = emotionRankTotals[year][label] + +d.rank;
+  });
+  const musicTypeCount = [];
+  for (const year in emotionRankTotals) {
+    for (const label in emotionRankTotals[year]) {
+      let averageRank;
+      if (yearTotal[year][label] === 0) {
+        averageRank = 100;
+      } else {
+        averageRank = emotionRankTotals[year][label] / yearTotal[year][label];
+      }
+      musicTypeCount.push({
+        year: year,
+        label: label,
+        //getting average rank
+        count: averageRank,
+      });
+    }
+  }
+  return musicTypeCount;
+}
+
+/**
+ * Processes data for the circle chart by calculating the distribution of emotions by year.
+ * @async
+ * @function circleChartProcessData
+ * @param {Array} data - The raw data to process.
+ * @returns {Promise<Array>} - Returns a Promise with the processed data for the circle chart.
+ */
 async function circleChartProcessData(data) {
-  console.log("processing data for circle chart");
   let emotionTotals = {};
   let yearTotal = {};
   data.forEach((d) => {
@@ -236,7 +363,6 @@ async function circleChartProcessData(data) {
     yearTotal[year] = yearTotal[year] + 1;
     emotionTotals[year][label] = emotionTotals[year][label] + 1;
   });
-  console.log(emotionTotals);
   const musicTypeCount = [];
   for (const year in emotionTotals) {
     for (const label in emotionTotals[year]) {
@@ -250,8 +376,55 @@ async function circleChartProcessData(data) {
   return musicTypeCount;
 }
 
+/**
+ * Processes data for the stacked bar chart by calculating the distribution of emotions by year.
+ * @async
+ * @function stackedBarChartProcessData
+ * @param {Array} data - The raw data to process.
+ * @returns {Promise<Array>} - Returns a Promise with the processed data for the stacked bar chart.
+ */
+async function stackedBarChartProcessData(data) {
+  let emotionTotals = {};
+  let yearTotal = {};
+  data.forEach((d) => {
+    const date = new Date(d.date);
+    const year = date.getFullYear();
+    const label = d.label;
+    if (!emotionTotals[year]) {
+      emotionTotals[year] = {};
+      emotionTotals[year]["happy"] = 0;
+      emotionTotals[year]["sad"] = 0;
+      emotionTotals[year]["energetic"] = 0;
+      emotionTotals[year]["calm"] = 0;
+    }
+    if (!yearTotal[year]) {
+      yearTotal[year] = 0;
+    }
+    yearTotal[year] = yearTotal[year] + 1;
+    emotionTotals[year][label] = emotionTotals[year][label] + 1;
+  });
+  const musicTypeCount = [];
+  for (const year in emotionTotals) {
+    musicTypeCount.push({
+      year: year,
+      happy: emotionTotals[year]["happy"] / yearTotal[year],
+      sad: emotionTotals[year]["sad"] / yearTotal[year],
+      energetic: emotionTotals[year]["energetic"] / yearTotal[year],
+      calm: emotionTotals[year]["calm"] / yearTotal[year],
+    });
+  }
+  return musicTypeCount;
+}
+
+/**
+ * Updates the stacked bar chart with the provided data.
+ * @function updateStackedBarChart
+ * @param {Array} data - The data to display in the stacked bar chart.
+ */
 function updateStackedBarChart(data) {
+  // year - > happy, sad, energetic, calm
   SvgStackedBar.selectAll("*").remove();
+  //got my example from
   //https://d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
 
   data.forEach(function (d) {
@@ -260,62 +433,47 @@ function updateStackedBarChart(data) {
 
   var subgroups = ["happy", "sad", "energetic", "calm"];
 
-  //copilot helped with this
-  var groups = Array.from(new Set(data.map((d) => d.year)));
+  var groups = data.map((d) => d.year);
 
   var xScale = d3
     .scaleBand()
     .domain(groups)
     .range([0, INNER_WIDTH])
     .padding([0.2]);
-  var yScale = d3
-    .scaleLinear()
-    .domain([0, 1]) // Max value based on counts
-    .range([INNER_HEIGHT, 0]);
+
+  var yScale = d3.scaleLinear().domain([0, 1]).range([INNER_HEIGHT, 0]);
 
   SvgStackedBar.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
     .call(d3.axisBottom(xScale).tickSizeOuter(0));
+
   SvgStackedBar.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
   var color = d3
     .scaleOrdinal()
     .domain(subgroups)
-    .range(["#e41a1c", "#377eb8", "#4daf4a", "#ff7f00"]);
+    .range([
+      emotionColors["happy"],
+      emotionColors["sad"],
+      emotionColors["energetic"],
+      emotionColors["calm"],
+    ]);
 
-  const groupedData = d3.group(data, (d) => d.year);
-
-  var stackedData = d3.stack().keys(subgroups)(
-    Array.from(groupedData, ([year, values]) => {
-      const result = { year };
-      subgroups.forEach((emotion) => {
-        const total = values.reduce(
-          (acc, d) => acc + (d.emotion === emotion ? d.proportion : 0),
-          0
-        );
-        result[emotion] = total; // Create a key for each emotion
-      });
-      return result;
-    })
-  );
+  var stackedData = d3.stack().keys(subgroups)(data);
 
   SvgStackedBar.append("g")
     .selectAll("g")
     .data(stackedData)
     .enter()
     .append("g")
-    .attr("fill", function (d) {
-      return color(d.key);
-    })
+    .attr("fill", (d) => color(d.key))
     .selectAll("rect")
-    .data(function (d) {
-      return d;
-    })
+    .data((d) => d)
     .enter()
     .append("rect")
     .attr("x", function (d) {
-      return xScale(d.data[0]);
+      return xScale(d.data.year);
     })
     .attr("y", function (d) {
       return yScale(d[1]);
@@ -324,17 +482,17 @@ function updateStackedBarChart(data) {
       return yScale(d[0]) - yScale(d[1]);
     })
     .attr("width", xScale.bandwidth());
-}
 
-function sliderForCircleChart(data, min, max) {
-  let slider = document.getElementById("circle-slider");
-  slider.min = min;
-  slider.max = max;
-  slider.value = min;
-  document.getElementById("circle-label").innerText = min;
-  document.getElementById("circle-slider").value = min;
-  slider.addEventListener("input", function () {
-    document.getElementById("circle-label").innerText = this.value;
-    updateCircleChart(data, this.value);
-  });
+  //adding axis labels
+  SvgStackedBar.append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", INNER_WIDTH / 2)
+    .attr("y", INNER_HEIGHT + MARGIN.bottom)
+    .text("Year");
+  SvgStackedBar.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(INNER_HEIGHT / 2))
+    .attr("y", -45)
+    .text("Proprtion of Music Type");
 }

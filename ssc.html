@@ -53,38 +53,44 @@
       .scatter-plot .hovered {
         fill: #979696;
       }
+      /* chat gpt made these styles */
+      .legend {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 20px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
+      }
+      .color-box {
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+        border-radius: 2px; /* Optional for rounded corners */
+      }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
   <body>
-    <p>SoundScape Chronicles Project</p>
+    <h2>SoundScape Chronicles Project</h2>
+    <h2>Nicole Forrester, Karena Klinkenberg, Liv Bigelow | 10/25/24</h2>
+    <div id="legend"></div>
     <div class="row chart">
       <div class="chart">
-        <h2 id="line-chart-header">Line Chart</h2>
+        <h2 id="line-chart-header">Line Chart - Song Emotion Count</h2>
         <div id="Linechart-div"></div>
       </div>
 
       <div class="chart">
-        <h2 id="bar-chart-header">Bar Chart</h2>
-        <div id="Barchart-div"></div>
+        <h2 id="rank-line-chart-header">Line Chart - Average Rank Per Year</h2>
+        <div id="rankLineChart-div"></div>
       </div>
     </div>
-
     <div class="row chart">
       <div class="chart">
-        <h2 id="pie-chart-header">Pie Chart</h2>
-        <div id="Piechart-div"></div>
-      </div>
-
-      <div class="chart">
-        <h2 id="filledline-plot-header">Filled Line Chart</h2>
-        <div id="Filledlineplot-div"></div>
-      </div>
-    </div>
-
-    <div class="row chart">
-      <div class="chart">
-        <h2 id="circle-chart-header">Circle Chart</h2>
+        <h2 id="circle-chart-header">Circle Chart - Song Emotion</h2>
         <div id="Circle-div"></div>
         <input
           type="range"
@@ -98,7 +104,9 @@
       </div>
 
       <div class="chart">
-        <h2 id="stacked-bar-header">Stacked Bar Header</h2>
+        <h2 id="stacked-bar-header">
+          Stacked Bar Chart - Type of Emotion Listened Ratio
+        </h2>
         <div id="Stackedbar-div"></div>
       </div>
     </div>
