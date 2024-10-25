@@ -57,6 +57,7 @@ async function setup() {
     Math.max(...years)
   );
   updateCircleChart(circle_chart_data, Math.min(...years));
+  updateStackedBarChart(circle_chart_data);
 }
 
 function createChartSVG(chartId) {
@@ -247,6 +248,82 @@ async function circleChartProcessData(data) {
     }
   }
   return musicTypeCount;
+}
+
+function updateStackedBarChart(data) {
+  SvgStackedBar.selectAll("*").remove();
+  //https://d3-graph-gallery.com/graph/barplot_stacked_basicWide.html
+
+  data.forEach(function (d) {
+    d.count = +d.count;
+  });
+
+  var subgroups = ["happy", "sad", "energetic", "calm"];
+
+  //copilot helped with this
+  var groups = Array.from(new Set(data.map((d) => d.year)));
+
+  var xScale = d3
+    .scaleBand()
+    .domain(groups)
+    .range([0, INNER_WIDTH])
+    .padding([0.2]);
+  var yScale = d3
+    .scaleLinear()
+    .domain([0, 1]) // Max value based on counts
+    .range([INNER_HEIGHT, 0]);
+
+  SvgStackedBar.append("g")
+    .attr("transform", "translate(0," + INNER_HEIGHT + " )")
+    .attr("class", "xAxis")
+    .call(d3.axisBottom(xScale).tickSizeOuter(0));
+  SvgStackedBar.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
+
+  var color = d3
+    .scaleOrdinal()
+    .domain(subgroups)
+    .range(["#e41a1c", "#377eb8", "#4daf4a", "#ff7f00"]);
+
+  const groupedData = d3.group(data, (d) => d.year);
+
+  var stackedData = d3.stack().keys(subgroups)(
+    Array.from(groupedData, ([year, values]) => {
+      const result = { year };
+      subgroups.forEach((emotion) => {
+        const total = values.reduce(
+          (acc, d) => acc + (d.emotion === emotion ? d.proportion : 0),
+          0
+        );
+        result[emotion] = total; // Create a key for each emotion
+      });
+      return result;
+    })
+  );
+
+  SvgStackedBar.append("g")
+    .selectAll("g")
+    .data(stackedData)
+    .enter()
+    .append("g")
+    .attr("fill", function (d) {
+      return color(d.key);
+    })
+    .selectAll("rect")
+    .data(function (d) {
+      return d;
+    })
+    .enter()
+    .append("rect")
+    .attr("x", function (d) {
+      return xScale(d.data[0]);
+    })
+    .attr("y", function (d) {
+      return yScale(d[1]);
+    })
+    .attr("height", function (d) {
+      return yScale(d[0]) - yScale(d[1]);
+    })
+    .attr("width", xScale.bandwidth());
 }
 
 function sliderForCircleChart(data, min, max) {
