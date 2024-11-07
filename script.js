@@ -37,7 +37,7 @@ async function setup() {
   SvgStackedBar = createChartSVG("#Stackedbar-div");
 
   //AreaChart-div
-  SvgAreaChart = createChartSVG('#AreaChart-div')
+  SvgAreaChart = createChartSVG("#AreaChart-div");
 
   let combinedData = await loadData();
 
@@ -235,40 +235,32 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
     .domain(data.map((d) => d.year))
     .range([0, INNER_WIDTH]);
 
-
-  let sum = data[0].count
-  let FirstEmote = data[0].label
-  let tempEmote = ''
-  let i = 1
-  while (FirstEmote != tempEmote){
-    sum = sum + data[i].count
-    tempEmote = data[i+1].label
-    i = i+1
+  let sum = data[0].count;
+  let FirstEmote = data[0].label;
+  let tempEmote = "";
+  let i = 1;
+  while (FirstEmote != tempEmote) {
+    sum = sum + data[i].count;
+    tempEmote = data[i + 1].label;
+    i = i + 1;
   }
 
   //copilot helped me with this
   let yScale;
   if (flip_y) {
-    yScale = d3
-      .scaleLinear()
-      .domain([0, sum])
-      .range([0, INNER_HEIGHT]);
+    yScale = d3.scaleLinear().domain([0, sum]).range([0, INNER_HEIGHT]);
   } else {
-    yScale = d3
-      .scaleLinear()
-      .domain([0, sum])
-      .range([INNER_HEIGHT, 0]);
+    yScale = d3.scaleLinear().domain([0, sum]).range([INNER_HEIGHT, 0]);
   }
 
   const cumulativeY = Array(data.length).fill(0);
-  const minYear = d3.min(data, (d)=> d.year)
+  const minYear = d3.min(data, (d) => d.year);
 
   const areaGenerator = d3
     .area()
     .x((d) => xScale(d.year))
-    .y0((d, i) => yScale(cumulativeY[d.year-minYear]))  // Use cumulative y for y0
-    .y1((d, i) => yScale(cumulativeY[d.year-minYear] + d.count));  // Stack current count on top
-  
+    .y0((d, i) => yScale(cumulativeY[d.year - minYear])) // Use cumulative y for y0
+    .y1((d, i) => yScale(cumulativeY[d.year - minYear] + d.count)); // Stack current count on top
 
   SvgChart.selectAll("*").remove();
 
@@ -283,16 +275,15 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
-    
+
     //creating line
     SvgChart.append("path")
       .datum(emotionData)
       .attr("fill", emotionColors[emotion])
-      .attr("d", areaGenerator(emotionData))
+      .attr("d", areaGenerator(emotionData));
 
     // Update cumulative values
-    emotionData.forEach((d, i) => cumulativeY[d.year-minYear] += d.count);
-
+    emotionData.forEach((d, i) => (cumulativeY[d.year - minYear] += d.count));
   }
 
   //adding axis labels
@@ -308,7 +299,6 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
     .attr("y", -45)
     .text(y_axis_label);
 }
-
 
 /**
  * Updates the circle chart with data for a specified year.
@@ -335,15 +325,40 @@ function updateCircleChart(data, value) {
 
   circle_coors.forEach((pos) => {
     const emotionData = yearData.find((d) => d.label === pos.emotion);
-
+    const radius = 100 * emotionData.count;
     if (emotionData && emotionData.count > 0) {
       SvgCircle.append("circle")
         .attr("cx", pos.x)
         .attr("cy", pos.y)
-        .attr("r", 100 * emotionData.count)
+        .attr("r", radius)
         .attr("fill", emotionColors[pos.emotion])
         .attr("class", "circle")
         .attr("opacity", 1);
+
+      const text = SvgCircle.append("text")
+        .attr("x", pos.x)
+        .attr("y", pos.y + radius + 20)
+        .attr("text-anchor", "middle")
+        .attr("fill", "black")
+        .attr("opacity", 0)
+        .text(
+          pos.emotion +
+            "- " +
+            emotionData.count * emotionData.yearcount +
+            " songs"
+        );
+
+      SvgCircle.append("circle")
+        .attr("cx", pos.x)
+        .attr("cy", pos.y)
+        .attr("r", radius + 20)
+        .attr("fill", "transparent")
+        .on("mouseover", function () {
+          text.attr("opacity", 1);
+        })
+        .on("mouseout", function () {
+          text.attr("opacity", 0);
+        });
     }
   });
 }
@@ -468,6 +483,7 @@ async function circleChartProcessData(data) {
         year: year,
         label: label,
         count: emotionTotals[year][label] / yearTotal[year],
+        yearcount: yearTotal[year],
       });
     }
   }
