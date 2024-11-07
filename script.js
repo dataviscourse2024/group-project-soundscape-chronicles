@@ -12,7 +12,7 @@ let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 const emotionColors = {
   happy: "#D55E00",
   energetic: "#CC79A7",
-  calm: "#009E73",
+  calm: "#F3EA77",
   sad: "#0072B2",
 };
 
@@ -188,6 +188,14 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
 
   SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
+  SvgChart.select(".xAxis path").attr("stroke", "white");
+
+  SvgChart.selectAll(".xAxis .tick line").attr("stroke", "white");
+
+  SvgChart.select(".yAxis path").attr("stroke", "white");
+
+  SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
+
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
@@ -270,7 +278,15 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
     .attr("class", "xAxis")
     .call(d3.axisBottom(xScale).ticks(data.length));
 
+  SvgChart.select(".xAxis path").attr("stroke", "white");
+
+  SvgChart.selectAll(".xAxis .tick line").attr("stroke", "white");
+
   SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
+
+  SvgChart.select(".yAxis path").attr("stroke", "white");
+
+  SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
 
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
@@ -563,6 +579,13 @@ function updateStackedBarChart(data) {
 
   SvgStackedBar.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
+  SvgStackedBar.select(".xAxis path").attr("stroke", "white");
+
+  SvgStackedBar.selectAll(".xAxis .tick line").attr("stroke", "white");
+
+  SvgStackedBar.select(".yAxis path").attr("stroke", "white");
+
+  SvgStackedBar.selectAll(".yAxis .tick line").attr("stroke", "white");
   var color = d3
     .scaleOrdinal()
     .domain(subgroups)
@@ -601,13 +624,13 @@ function updateStackedBarChart(data) {
         .attr("x", xScale(d.data.year) + xScale.bandwidth() / 2)
         .attr("y", yScale(d[1]) + 30)
         .attr("text-anchor", "middle")
-        .attr("fill", "black")
-        .attr("class", "hover-")
+        .attr("fill", "white")
+        .attr("class", "hover")
         .text(`${d.data.year} : ${Math.round((d[1] - d[0]) * 100)}%`);
     })
     .on("mouseout", function () {
       // Remove label on mouse out
-      SvgStackedBar.selectAll(".hover-").remove();
+      SvgStackedBar.selectAll(".hover").remove();
     });
 
   //adding axis labels

@@ -5,8 +5,22 @@
     <title>SoundScape Chronicles</title>
     <style>
       .chart,
+      h1 {
+        text-align: center;
+        color: #1ed760;
+      }
       h2 {
         text-align: center;
+        color: #1ed760;
+      }
+
+      h3 {
+        text-align: center;
+        color: #1ed760;
+      }
+
+      body {
+        background-color: black;
       }
 
       .row {
@@ -39,9 +53,8 @@
       }
 
       text {
-        fill: black;
+        fill: white;
       }
-
       .area-chart {
         fill: rgb(79, 175, 211);
       }
@@ -64,18 +77,25 @@
         align-items: center;
         margin-right: 20px;
       }
+
+      .legend-item span {
+        color: white;
+      }
       .color-box {
         width: 20px;
         height: 20px;
         margin-right: 5px;
         border-radius: 2px; /* Optional for rounded corners */
       }
+      #circle-label {
+        color: white;
+      }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
   <body>
-    <h2>SoundScape Chronicles Project</h2>
-    <h2>Nicole Forrester, Karena Klinkenberg, Liv Bigelow | 10/25/24</h2>
+    <h1>SoundScape Chronicles Project</h1>
+    <h3>Nicole Forrester, Karena Klinkenberg, Liv Bigelow | 11/07/24</h3>
     <div id="legend"></div>
     <div class="row chart">
       <div class="chart">
