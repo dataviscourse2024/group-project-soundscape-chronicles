@@ -575,7 +575,7 @@ function updateStackedBarChart(data) {
     ]);
 
   var stackedData = d3.stack().keys(subgroups)(data);
-
+  console.log(stackedData);
   SvgStackedBar.append("g")
     .selectAll("g")
     .data(stackedData)
@@ -587,6 +587,7 @@ function updateStackedBarChart(data) {
     .enter()
     .append("rect")
     .attr("x", function (d) {
+      console.log(d);
       return xScale(d.data.year);
     })
     .attr("y", function (d) {
@@ -595,7 +596,20 @@ function updateStackedBarChart(data) {
     .attr("height", function (d) {
       return yScale(d[0]) - yScale(d[1]);
     })
-    .attr("width", xScale.bandwidth());
+    .attr("width", xScale.bandwidth())
+    .on("mouseover", function (event, d) {
+      SvgStackedBar.append("text")
+        .attr("x", xScale(d.data.year) + xScale.bandwidth() / 2)
+        .attr("y", yScale(d[1]) + 30)
+        .attr("text-anchor", "middle")
+        .attr("fill", "black")
+        .attr("class", "hover-")
+        .text(`${d.data.year} : ${Math.round((d[1] - d[0]) * 100)}%`);
+    })
+    .on("mouseout", function () {
+      // Remove label on mouse out
+      SvgStackedBar.selectAll(".hover-").remove();
+    });
 
   //adding axis labels
   SvgStackedBar.append("text")
