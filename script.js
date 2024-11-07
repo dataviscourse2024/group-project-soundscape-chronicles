@@ -281,7 +281,6 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
       .datum(emotionData)
       .attr("fill", emotionColors[emotion])
       .attr("d", areaGenerator(emotionData));
-
     // Update cumulative values
     emotionData.forEach((d, i) => (cumulativeY[d.year - minYear] += d.count));
   }
