@@ -7,7 +7,7 @@ const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
 
-let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar;
+let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
 const emotionColors = {
   happy: "#D55E00",
@@ -36,6 +36,9 @@ async function setup() {
   //Stackedbar-div
   SvgStackedBar = createChartSVG("#Stackedbar-div");
 
+  //AreaChart-div
+  SvgAreaChart = createChartSVG('#AreaChart-div')
+
   let combinedData = await loadData();
 
   //line chart
@@ -62,6 +65,9 @@ async function setup() {
     "Average Rank",
     (flip_y = true)
   );
+
+  //stacked area chart
+  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false);
 
   //legend - chatgpt helped with this
   const legendContainer = d3.select("#legend");
@@ -211,6 +217,98 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
     .attr("y", -45)
     .text(y_axis_label);
 }
+
+/**
+ * Updates a line chart with provided data.
+ * @function updateLineChart
+ * @param {Array} data - The data to display in the line chart.
+ * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {string} y_axis_label - Label for the y-axis.
+ * @param {boolean} flip_y - Whether to invert the y-axis scale.
+ */
+function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
+  //https://d3-graph-gallery.com/graph/line_basic.html
+
+  //copilot helped me with this
+  let xScale = d3
+    .scalePoint()
+    .domain(data.map((d) => d.year))
+    .range([0, INNER_WIDTH]);
+
+
+  let sum = data[0].count
+  let FirstEmote = data[0].label
+  let tempEmote = ''
+  let i = 1
+  while (FirstEmote != tempEmote){
+    sum = sum + data[i].count
+    tempEmote = data[i+1].label
+    i = i+1
+  }
+
+  //copilot helped me with this
+  let yScale;
+  if (flip_y) {
+    yScale = d3
+      .scaleLinear()
+      .domain([0, sum])
+      .range([0, INNER_HEIGHT]);
+  } else {
+    yScale = d3
+      .scaleLinear()
+      .domain([0, sum])
+      .range([INNER_HEIGHT, 0]);
+  }
+
+  const cumulativeY = Array(data.length).fill(0);
+  const minYear = d3.min(data, (d)=> d.year)
+
+  const areaGenerator = d3
+    .area()
+    .x((d) => xScale(d.year))
+    .y0((d, i) => yScale(cumulativeY[d.year-minYear]))  // Use cumulative y for y0
+    .y1((d, i) => yScale(cumulativeY[d.year-minYear] + d.count));  // Stack current count on top
+  
+
+  SvgChart.selectAll("*").remove();
+
+  //apending axis
+  SvgChart.append("g")
+    .attr("transform", "translate(0," + INNER_HEIGHT + " )")
+    .attr("class", "xAxis")
+    .call(d3.axisBottom(xScale).ticks(data.length));
+
+  SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
+
+  //copilot helped me with this
+  for (const emotion of Object.keys(emotionColors)) {
+    const emotionData = data.filter((d) => d.label === emotion);
+    
+    //creating line
+    SvgChart.append("path")
+      .datum(emotionData)
+      .attr("fill", emotionColors[emotion])
+      .attr("d", areaGenerator(emotionData))
+
+    // Update cumulative values
+    emotionData.forEach((d, i) => cumulativeY[d.year-minYear] += d.count);
+
+  }
+
+  //adding axis labels
+  SvgChart.append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", INNER_WIDTH / 2)
+    .attr("y", INNER_HEIGHT + MARGIN.bottom)
+    .text("Year");
+  SvgChart.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(INNER_HEIGHT / 2))
+    .attr("y", -45)
+    .text(y_axis_label);
+}
+
 
 /**
  * Updates the circle chart with data for a specified year.
