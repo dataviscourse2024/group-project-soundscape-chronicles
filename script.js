@@ -358,7 +358,7 @@ function updateCircleChart(data, value) {
         .attr("opacity", 0)
         .text(
           pos.emotion +
-            "- " +
+            " - " +
             emotionData.count * emotionData.yearcount +
             " songs"
         );
