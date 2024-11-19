@@ -288,9 +288,11 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
 
   SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
 
+  console.log(data)
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
+
 
     //creating line
     SvgChart.append("path")
@@ -301,7 +303,7 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
     emotionData.forEach((d, i) => (cumulativeY[d.year - minYear] += d.count));
   }
 
-  //adding axis labels
+  //adding axis labelså
   SvgChart.append("text")
     .attr("text-anchor", "middle")
     .attr("x", INNER_WIDTH / 2)
@@ -389,6 +391,7 @@ async function lineChartProcessData(data) {
   let emotionTotals = {};
   data.forEach((d) => {
     const date = new Date(d.date);
+    date.setDate(date.getDate() + 1);
     const year = date.getFullYear();
     const label = d.label;
     if (!emotionTotals[year]) {
@@ -425,6 +428,7 @@ async function rankLineChartProcessData(data) {
   let yearTotal = {};
   data.forEach((d) => {
     const date = new Date(d.date);
+    date.setDate(date.getDate() + 1);
     const year = date.getFullYear();
     const label = d.label;
     if (!emotionRankTotals[year]) {
@@ -476,6 +480,7 @@ async function circleChartProcessData(data) {
   let yearTotal = {};
   data.forEach((d) => {
     const date = new Date(d.date);
+    date.setDate(date.getDate() + 1);
     const year = date.getFullYear();
     const label = d.label;
     if (!emotionTotals[year]) {
@@ -517,6 +522,7 @@ async function stackedBarChartProcessData(data) {
   let yearTotal = {};
   data.forEach((d) => {
     const date = new Date(d.date);
+    date.setDate(date.getDate() + 1);
     const year = date.getFullYear();
     const label = d.label;
     if (!emotionTotals[year]) {
@@ -597,7 +603,6 @@ function updateStackedBarChart(data) {
     ]);
 
   var stackedData = d3.stack().keys(subgroups)(data);
-  console.log(stackedData);
   SvgStackedBar.append("g")
     .selectAll("g")
     .data(stackedData)
@@ -609,7 +614,6 @@ function updateStackedBarChart(data) {
     .enter()
     .append("rect")
     .attr("x", function (d) {
-      console.log(d);
       return xScale(d.data.year);
     })
     .attr("y", function (d) {
