@@ -19,6 +19,15 @@
         color: #1ed760;
       }
 
+      .chart h3 {
+        max-width: 650px; /* Matches the width of the SVG */
+        margin: 0 auto;
+        text-align: center;
+        color: #1ed760;
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+
       body {
         background-color: black;
         font-family: "Trebuchet MS", sans-serif;
@@ -99,19 +108,34 @@
     <h3>Nicole Forrester, Karena Klinkenberg, Liv Bigelow | 11/07/24</h3>
     <div id="legend"></div>
     <h2>Purpose</h2>
-    <h3>This project explores the relationship between historical events and music preferences, aiming to reveal how external events like elections, pandemics, or social movements may impact the types of music people choose to listen to. By analyzing changes in music preferences—particularly the prevalence of different emotional categories (e.g., sad, happy, calm, energetic)—we can gain insights into collective emotional trends during various time periods. These visualizations provide a historical perspective on how music may reflect or influence public sentiment and emotional trends over time.
+    <h3>
+      This project explores the relationship between historical events and music
+      preferences, aiming to reveal how external events like elections,
+      pandemics, or social movements may impact the types of music people choose
+      to listen to. By analyzing changes in music preferences—particularly the
+      prevalence of different emotional categories (e.g., sad, happy, calm,
+      energetic)—we can gain insights into collective emotional trends during
+      various time periods. These visualizations provide a historical
+      perspective on how music may reflect or influence public sentiment and
+      emotional trends over time.
     </h3>
     <div class="row chart">
       <div class="chart">
         <h2 id="line-chart-header">Line Chart - Song Emotion Count</h2>
         <div id="Linechart-div"></div>
-        <h3>This chart shows the total number of songs for each of the given emotions that appear in the top 100 for that year.</h3>
+        <h3>
+          This chart shows the total number of songs for each of the given
+          emotions that appear in the top 100 for that year.
+        </h3>
       </div>
 
       <div class="chart">
         <h2 id="rank-line-chart-header">Line Chart - Average Rank Per Year</h2>
         <div id="rankLineChart-div"></div>
-        <h3>This chart shows the average rank on the top 100 for each of the given emotions that appear in the top 100 for that year.</h3>
+        <h3>
+          This chart shows the average rank on the top 100 for each of the given
+          emotions that appear in the top 100 for that year.
+        </h3>
       </div>
     </div>
     <div class="row chart">
@@ -127,7 +151,11 @@
           value="2024"
         />
         <label for="circle-slider" id="circle-label">Year: 2024</label>
-        <h3>The size of each circle represents the number of songs for each emotion that appear in the top 100 that year. Use the slider above to observe the change in trends, year by year</h3>
+        <h3>
+          The size of each circle represents the number of songs for each
+          emotion that appear in the top 100 that year. Use the slider above to
+          observe the change in trends, year by year
+        </h3>
       </div>
 
       <div class="chart">
@@ -135,14 +163,21 @@
           Stacked Bar Chart - Type of Emotion Listened Ratio
         </h2>
         <div id="Stackedbar-div"></div>
-        <h3>This chart shows the proportion of songs for the given emotion that appear in the top 100 for that year. For more accruate numbers, hover over the bar.</h3>
+        <h3>
+          This chart shows the proportion of songs for the given emotion that
+          appear in the top 100 for that year. For more accruate numbers, hover
+          over the bar.
+        </h3>
       </div>
     </div>
     <div class="row chart">
       <div class="chart">
         <h2 id="area-chart-header">Area Chart - Song Emotion Count</h2>
         <div id="AreaChart-div"></div>
-        <h3>This chart shows the total number of songs for each of the given emotions that appear in the top 100 for that year.</h3>
+        <h3>
+          This chart shows the total number of songs for each of the given
+          emotions that appear in the top 100 for that year.
+        </h3>
       </div>
     </div>
   </body>

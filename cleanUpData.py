@@ -32,7 +32,7 @@ def merge_csvs():
 
 
     # Your mapping dictionary
-    label_mapping = {0: 'sad', 1: 'happy', 2: 'energetic', 3: 'calm'}
+    label_mapping = {'0': 'sad', '1': 'happy', '2': 'energetic', '3': 'calm'}
 
     # Function to convert and map labels
     def convert_labels(df):
@@ -41,21 +41,25 @@ def merge_csvs():
         return df
 
 
-    df1 = pd.read_csv('data/nicoledata.csv')
+    df1 = pd.read_csv('olddata/data_1986-88_karena.csv')
     df1['date'] = pd.to_datetime(df1['date'])
-    df2 = pd.read_csv('data/livdata.csv')
+    df2 = pd.read_csv('olddata/spotify_data_1990_1993.csv')
     df2['date'] = pd.to_datetime(df2['date'])
-    df3 = pd.read_csv('data/karenadata.csv')
+    df3 = pd.read_csv('olddata/spotify_data_1999_1994.csv')
     df3['date'] = pd.to_datetime(df3['date'])
+    df4 = pd.read_csv('olddata/combined_data.csv')
+    df4['date'] = pd.to_datetime(df4['date'])
+    
+    print(len(df1), len(df2), len(df3), len(df4))    
 
 
-    # Assuming your dataframes are named df1, df2, and df3
-    combined_df = pd.concat([df1, df2, df3])
+    # Assuming your dataframes are named df1, df2, df3, and df4
+    combined_df = pd.concat([df1, df2, df3, df4])
     combined_df = convert_labels(combined_df)
     combined_df = combined_df.sort_values(by='date')
     
     # Write the combined dataframe to a CSV file
-    combined_df.to_csv('data/combined_data.csv', index=False)
+    combined_df.to_csv('data/combined_data_final.csv', index=False)
 
 #function to convert csv to json
 def csv_to_json(csv_file_path, json_file_path):
@@ -82,3 +86,6 @@ def convert_labels(df):
     # Map numeric labels to text labels
     df['label'] = df['label'].replace(label_mapping)
     return df
+
+merge_csvs()
+csv_to_json("data/combined_data_final.csv", "data/combined_data_final.json")

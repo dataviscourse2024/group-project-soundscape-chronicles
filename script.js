@@ -126,7 +126,7 @@ function createSliderForCircleChart(data) {
  * @returns {Promise<Object>} - Returns a Promise with the loaded JSON data.
  */
 async function loadData() {
-  return fetch("data/combined_data.json")
+  return fetch("data/combined_data_final.json")
     .then((response) => {
       if (!response.ok) {
         throw new Error("Error fetching the data - no response");
@@ -184,7 +184,7 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
   SvgChart.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
-    .call(d3.axisBottom(xScale).ticks(data.length));
+    .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
 
   SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
@@ -276,7 +276,7 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
   SvgChart.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
-    .call(d3.axisBottom(xScale).ticks(data.length));
+    .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
 
   SvgChart.select(".xAxis path").attr("stroke", "white");
 
@@ -575,7 +575,7 @@ function updateStackedBarChart(data) {
   SvgStackedBar.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
-    .call(d3.axisBottom(xScale).tickSizeOuter(0));
+    .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
 
   SvgStackedBar.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
 
