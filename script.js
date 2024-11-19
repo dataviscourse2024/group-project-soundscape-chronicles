@@ -7,6 +7,7 @@ const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
 const SPOTIFY_GREEN = '#1ed760';
+let hideModalTimeout = 200;
 
 let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
@@ -57,7 +58,7 @@ async function setup() {
 
   //stacked bar chart
   let stackBarChartData = await stackedBarChartProcessData(combinedData);
-  updateStackedBarChart(stackBarChartData);
+  updateStackedBarChart(stackBarChartData, eventsData);
 
   //rank line chart
   let rankLineData = await rankLineChartProcessData(combinedData);
@@ -70,7 +71,7 @@ async function setup() {
   );
 
   //stacked area chart
-  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false);
+  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false, eventsData);
 
   //legend - chatgpt helped with this
   const legendContainer = d3.select("#legend");
@@ -252,7 +253,6 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
     .text(y_axis_label);
 
   //copilot helped w this
-  // Add event overlay
   const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
   const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
 
@@ -261,8 +261,8 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
     .enter()
     .append("line")
     .attr("class", "event-line")
-    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
-    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
     .attr("y1", 0)
     .attr("y2", INNER_HEIGHT)
     .attr("stroke", SPOTIFY_GREEN)
@@ -270,49 +270,68 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
 
   
 
-  eventOverlay.selectAll(".event-dot")
+    eventOverlay.selectAll(".event-dot")
     .data(eventsData)
     .enter()
     .append("circle")
     .attr("class", "event-dot")
-    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
     .attr("cy", 0)
-    .attr("r", 5)
-    .attr("fill", SPOTIFY_GREEN);
-
-  // Add invisible larger circles for better hover area
-  eventOverlay.selectAll(".event-hover")
-    .data(eventsData)
-    .enter()
-    .append("circle")
-    .attr("class", "event-hover")
-    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
-    .attr("cy", 0)
-    .attr("r", 20) // Larger radius for better hover area
-    .attr("fill", "transparent")
+    .attr("r", 7)
+    .attr("fill", SPOTIFY_GREEN)
     .on("mouseover", function (event, d) {
       showModal(d.title, d.description);
     })
-    .on("mousemove", function (event, d) {
-      showModal(d.title, d.description);
-    })
     .on("mouseout", function () {
-      d3.select(this.nextSibling).attr("r", 5); // Reset the radius of the actual dot
-      setTimeout(hideModal, 200); // Add a small delay before hiding the modal
+      hideModal()
     });
-}
 
-//written by copilot
+
+}
 /**
- * Shows a modal with the event title and description.
+ * Shows the event modal with a title, description, and positions it relative to the mouse.
  * @function showModal
- * @param {string} title - The title of the event.
- * @param {string} description - The description of the event.
+ * @param {string} title - The title to display in the modal.
+ * @param {string} description - The description to display in the modal.
  */
 function showModal(title, description) {
+ 
   const modal = document.getElementById("event-modal");
+
+
+  // Set modal content
   modal.querySelector(".modal-title").textContent = title;
   modal.querySelector(".modal-body").textContent = description;
+
+  // Get the mouse position (clientX, clientY are relative to the viewport)
+  const mouseX = window.event.clientX + window.pageXOffset; // Adjust for scrolling horizontally
+  const mouseY = window.event.clientY + window.pageYOffset; // Adjust for scrolling vertically
+
+  // Calculate modal position with a buffer
+  const buffer = -250; // Space between the mouse pointer and the modal
+  let modalLeft = mouseX + buffer - 150;
+  let modalTop = mouseY + buffer - 160;
+
+  // Prevent modal from going off the screen (adjust boundaries)
+  const modalWidth = modal.offsetWidth;
+  const modalHeight = modal.offsetHeight;
+
+  // Check if the modal would go off the right side of the screen
+  if (modalLeft + modalWidth > window.innerWidth + window.pageXOffset) {
+    modalLeft = mouseX - modalWidth - buffer; // Move modal to the left of the pointer
+  }
+
+  // Check if the modal would go off the bottom of the screen
+  if (modalTop + modalHeight > window.innerHeight + window.pageYOffset) {
+    modalTop = mouseY - modalHeight - buffer; // Move modal above the pointer
+  }
+
+  // Apply calculated position
+  modal.style.left = `${modalLeft}px`;
+  modal.style.top = `${modalTop}px`;
+  modal.style.position = "absolute";
+
+  // Show the modal
   modal.style.display = "block";
 }
 
@@ -324,7 +343,6 @@ function hideModal() {
   const modal = document.getElementById("event-modal");
   modal.style.display = "none";
 }
-
 /**
  * Updates an area chart with provided data.
  * @function updateAreaChart
@@ -333,7 +351,7 @@ function hideModal() {
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
+function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   //copilot helped me with this
@@ -414,6 +432,41 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y) {
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
     .text(y_axis_label);
+
+    const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
+    const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
+  
+    eventOverlay.selectAll(".event-line")
+      .data(eventsData)
+      .enter()
+      .append("line")
+      .attr("class", "event-line")
+      .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+      .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+      .attr("y1", 0)
+      .attr("y2", INNER_HEIGHT)
+      .attr("stroke", SPOTIFY_GREEN)
+      .attr("stroke-width", 1);
+  
+    
+  
+    eventOverlay.selectAll(".event-dot")
+      .data(eventsData)
+      .enter()
+      .append("circle")
+      .attr("class", "event-dot")
+      .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+      .attr("cy", 0)
+      .attr("r", 7)
+      .attr("fill", SPOTIFY_GREEN)
+      .on("mouseover", function (event, d) {
+
+        showModal(d.title, d.description);
+      })
+      .on("mouseout", function () {
+        setTimeout(hideModal, 200); // Add a small delay before hiding the modal
+      });
+  
 }
 
 /**
@@ -655,7 +708,7 @@ async function stackedBarChartProcessData(data) {
  * @function updateStackedBarChart
  * @param {Array} data - The data to display in the stacked bar chart.
  */
-function updateStackedBarChart(data) {
+function updateStackedBarChart(data, eventsData) {
   // year - > happy, sad, energetic, calm
   SvgStackedBar.selectAll("*").remove();
   //got my example from
@@ -748,4 +801,40 @@ function updateStackedBarChart(data) {
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
     .text("Proprtion of Music Type");
+
+  const eventOverlay = SvgStackedBar.append("g").attr("class", "event-overlay");
+  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
+
+  eventOverlay.selectAll(".event-line")
+    .data(eventsData)
+    .enter()
+    .append("line")
+    .attr("class", "event-line")
+    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("y1", 0)
+    .attr("y2", INNER_HEIGHT)
+    .attr("stroke", SPOTIFY_GREEN)
+    .attr("stroke-width", 1);
+
+  
+
+  eventOverlay.selectAll(".event-dot")
+    .data(eventsData)
+    .enter()
+    .append("circle")
+    .attr("class", "event-dot")
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("cy", 0)
+    .attr("r", 7)
+    .attr("fill", SPOTIFY_GREEN)
+    .on("mouseover", function (event, d) {
+      showModal(d.title, d.description);
+    })
+    .on("mouseout", function () {
+      hideModal()
+    });
+
+  
+  
 }
