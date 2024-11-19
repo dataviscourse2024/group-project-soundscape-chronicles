@@ -6,6 +6,7 @@ const MARGIN = { left: 70, bottom: 40, top: 20, right: 20 };
 const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
+const SPOTIFY_GREEN = '#1ed760';
 
 let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
@@ -40,10 +41,11 @@ async function setup() {
   SvgAreaChart = createChartSVG("#AreaChart-div");
 
   let combinedData = await loadData();
+  let eventsData = await loadEventData();
 
   //line chart
   let lineChartData = await lineChartProcessData(combinedData);
-  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false);
+  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false, eventsData);
 
   //circle chart
   let circleChartData = await circleChartProcessData(combinedData);
@@ -63,7 +65,8 @@ async function setup() {
     rankLineData,
     SvgRankLineChart,
     "Average Rank",
-    (flip_y = true)
+    (flip_y = true),
+    eventsData
   );
 
   //stacked area chart
@@ -143,6 +146,27 @@ async function loadData() {
 }
 
 /**
+ * Loads event data from csv.
+ * @async
+ * @function loadEventData
+ * @returns {Promise<Array>} - Returns the loaded event data.
+ */
+async function loadEventData() {
+  //assisted by copilot
+  // Load historical events data
+  const eventsResponse = await fetch("data/historical_events_1981_2020.csv");
+  const eventsText = await eventsResponse.text();
+  const eventsData = d3.csvParse(eventsText);
+
+  // Parse event dates
+  eventsData.forEach(event => {
+    event.date = d3.timeParse("%Y-%m")(event.date);
+  });
+
+  return eventsData;
+}
+
+/**
  * Updates a line chart with provided data.
  * @function updateLineChart
  * @param {Array} data - The data to display in the line chart.
@@ -150,8 +174,10 @@ async function loadData() {
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
+function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
   //https://d3-graph-gallery.com/graph/line_basic.html
+
+  console.log("Event data" + eventsData);
 
   //copilot helped me with this
   let xScale = d3
@@ -224,11 +250,84 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y) {
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
     .text(y_axis_label);
+
+  //copilot helped w this
+  // Add event overlay
+  const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
+  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
+
+  eventOverlay.selectAll(".event-line")
+    .data(eventsData)
+    .enter()
+    .append("line")
+    .attr("class", "event-line")
+    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("y1", 0)
+    .attr("y2", INNER_HEIGHT)
+    .attr("stroke", SPOTIFY_GREEN)
+    .attr("stroke-width", 1);
+
+  
+
+  eventOverlay.selectAll(".event-dot")
+    .data(eventsData)
+    .enter()
+    .append("circle")
+    .attr("class", "event-dot")
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("cy", 0)
+    .attr("r", 5)
+    .attr("fill", SPOTIFY_GREEN);
+
+  // Add invisible larger circles for better hover area
+  eventOverlay.selectAll(".event-hover")
+    .data(eventsData)
+    .enter()
+    .append("circle")
+    .attr("class", "event-hover")
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("cy", 0)
+    .attr("r", 20) // Larger radius for better hover area
+    .attr("fill", "transparent")
+    .on("mouseover", function (event, d) {
+      showModal(d.title, d.description);
+    })
+    .on("mousemove", function (event, d) {
+      showModal(d.title, d.description);
+    })
+    .on("mouseout", function () {
+      d3.select(this.nextSibling).attr("r", 5); // Reset the radius of the actual dot
+      setTimeout(hideModal, 200); // Add a small delay before hiding the modal
+    });
+}
+
+//written by copilot
+/**
+ * Shows a modal with the event title and description.
+ * @function showModal
+ * @param {string} title - The title of the event.
+ * @param {string} description - The description of the event.
+ */
+function showModal(title, description) {
+  const modal = document.getElementById("event-modal");
+  modal.querySelector(".modal-title").textContent = title;
+  modal.querySelector(".modal-body").textContent = description;
+  modal.style.display = "block";
 }
 
 /**
- * Updates a line chart with provided data.
- * @function updateLineChart
+ * Hides the event modal.
+ * @function hideModal
+ */
+function hideModal() {
+  const modal = document.getElementById("event-modal");
+  modal.style.display = "none";
+}
+
+/**
+ * Updates an area chart with provided data.
+ * @function updateAreaChart
  * @param {Array} data - The data to display in the line chart.
  * @param {Object} SvgChart - The SVG element for the line chart.
  * @param {string} y_axis_label - Label for the y-axis.
