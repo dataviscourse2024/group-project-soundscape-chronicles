@@ -295,6 +295,7 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
  * @param {string} description - The description to display in the modal.
  */
 function showModal(title, description) {
+  new Promise(resolve => setTimeout(resolve, 10));
  
   const modal = document.getElementById("event-modal");
 
@@ -333,6 +334,8 @@ function showModal(title, description) {
 
   // Show the modal
   modal.style.display = "block";
+
+  return new Promise(resolve => setTimeout(resolve, 200));
 }
 
 /**
@@ -802,39 +805,4 @@ function updateStackedBarChart(data, eventsData) {
     .attr("y", -45)
     .text("Proprtion of Music Type");
 
-  const eventOverlay = SvgStackedBar.append("g").attr("class", "event-overlay");
-  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
-
-  eventOverlay.selectAll(".event-line")
-    .data(eventsData)
-    .enter()
-    .append("line")
-    .attr("class", "event-line")
-    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("y1", 0)
-    .attr("y2", INNER_HEIGHT)
-    .attr("stroke", SPOTIFY_GREEN)
-    .attr("stroke-width", 1);
-
-  
-
-  eventOverlay.selectAll(".event-dot")
-    .data(eventsData)
-    .enter()
-    .append("circle")
-    .attr("class", "event-dot")
-    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("cy", 0)
-    .attr("r", 7)
-    .attr("fill", SPOTIFY_GREEN)
-    .on("mouseover", function (event, d) {
-      showModal(d.title, d.description);
-    })
-    .on("mouseout", function () {
-      hideModal()
-    });
-
-  
-  
 }
