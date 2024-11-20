@@ -27,7 +27,7 @@ def check_for_missing_data():
 #merging our data collection
 def merge_csvs():
     #Some code to run later once all 3 of us have gotten our data
-    #this chunk will take all of the data we have after collection, and combine it into 1 legible file.
+    #this chunk atwill take all of the data we have after collection, and combine it into 1 legible file.
     #make sure to rename the 3 data files.
 
 
@@ -41,8 +41,10 @@ def merge_csvs():
         return df
 
 
-    df1 = pd.read_csv('olddata/data_1986-88_karena.csv')
+    df1 = pd.read_csv('oldda/data_1986_88_filled.csv')
     df1['date'] = pd.to_datetime(df1['date'])
+    df5 = pd.read_csv('olddata/data89_data89.csv')
+    df5['date'] = pd.to_datetime(df5['date'])
     df2 = pd.read_csv('olddata/spotify_data_1990_1993.csv')
     df2['date'] = pd.to_datetime(df2['date'])
     df3 = pd.read_csv('olddata/spotify_data_1999_1994.csv')
@@ -50,16 +52,17 @@ def merge_csvs():
     df4 = pd.read_csv('olddata/combined_data.csv')
     df4['date'] = pd.to_datetime(df4['date'])
     
-    print(len(df1), len(df2), len(df3), len(df4))    
+    print(len(df1), len(df5), len(df2), len(df3), len(df4))    
 
 
     # Assuming your dataframes are named df1, df2, df3, and df4
-    combined_df = pd.concat([df1, df2, df3, df4])
+    combined_df = pd.concat([df1, df5, df2, df3, df4])
     combined_df = convert_labels(combined_df)
     combined_df = combined_df.sort_values(by='date')
+    drop_dups = combined_df.drop_duplicates()
     
     # Write the combined dataframe to a CSV file
-    combined_df.to_csv('data/combined_data_final.csv', index=False)
+    drop_dups.to_csv('data/combined_data_final.csv', index=False)
 
 #function to convert csv to json
 def csv_to_json(csv_file_path, json_file_path):
@@ -87,5 +90,6 @@ def convert_labels(df):
     df['label'] = df['label'].replace(label_mapping)
     return df
 
-merge_csvs()
-csv_to_json("data/combined_data_final.csv", "data/combined_data_final.json")
+# merge_csvs()
+# csv_to_json("data/combined_data_final.csv", "data/combined_data_final.json")
+print(len(pd.read_csv("data/combined_data_final.csv")))

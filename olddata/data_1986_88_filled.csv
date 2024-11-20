@@ -582,6 +582,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1988-07-02,81,When We Kiss,Bardeux,71,36,12,sad
 1988-07-02,82,Forever Yours,Tony Terry,89,82,2,happy
 1988-07-02,83,Wishing Well,Terence Trent D'Arby,66,1,25,1
+1988-07-02,84,Route 66/Behind The Wheel,Depeche Mode,72,61,9,energetic
 1988-07-02,85,Electric Blue,Icehouse,65,7,21,happy
 1988-07-02,86,Rhythm Of Love,Scorpions,75,75,5,happy
 1988-07-02,87,When Will I Be Famous?,Bros,96,87,2,happy
@@ -662,6 +663,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1988-06-04,62,"Wild, Wild West",Kool Moe Dee,63,62,6,happy
 1988-06-04,63,Rooty Toot Toot,John Mellencamp,69,63,4,happy
 1988-06-04,64,Tomorrow People,Ziggy Marley And The Melody Makers,66,64,4,1
+1988-06-04,65,Route 66/Behind The Wheel,Depeche Mode,61,61,5,energetic
 1988-06-04,66,"Get Outta My Dreams, Get Into My Car",Billy Ocean,48,1,17,happy
 1988-06-04,67,Take It While It's Hot,Sweet Sensation,57,57,9,happy
 1988-06-04,68,Like The Weather,"10,000 Maniacs",75,68,5,happy
@@ -787,6 +789,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1988-05-07,88,Father Figure,George Michael,74,1,17,0
 1988-05-07,89,Get It,Stevie Wonder & Michael Jackson,,89,1,happy
 1988-05-07,90,Rush Hour,Jane Wiedlin,,90,1,happy
+1988-05-07,91,Route 66/Behind The Wheel,Depeche Mode,,91,1,energetic
 1988-05-07,92,Hysteria,Def Leppard,77,10,16,0
 1988-05-07,93,Love Changes Everything,Honeymoon Suite,91,91,2,happy
 1988-05-07,94,Like The Weather,"10,000 Maniacs",,94,1,happy
@@ -868,6 +871,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1988-04-02,70,Don't Make A Fool Of Yourself,Stacey Q,68,66,6,happy
 1988-04-02,71,I Want To Be Your Property,Blue Mercedes,66,66,5,happy
 1988-04-02,72,Need You Tonight,INXS,62,1,24,1
+1988-04-02,73,Samantha (What You Gonna Do?),Cellarful Of Noise,78,73,9,happy
 1988-04-02,74,Seasons Change,Expose,56,1,19,happy
 1988-04-02,75,Play That Funky Music,Roxanne,77,75,4,happy
 1988-04-02,76,Never Thought (That I Could Love),Dan Hill,67,43,17,sad
@@ -988,6 +992,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1988-03-05,91,"Yes (From The Motion Picture ""Dirty Dancing"")",Merry Clayton,,91,1,happy
 1988-03-05,92,Crazy,Icehouse,75,14,21,happy
 1988-03-05,93,Cherry Bomb,John Mellencamp,91,8,20,1
+1988-03-05,94,Samantha (What You Gonna Do?),Cellarful Of Noise,,94,1,happy
 1988-03-05,95,Faith,George Michael,78,1,20,1
 1988-03-05,96,Rhythm Of Love,Yes,74,40,12,happy
 1988-03-05,97,Hot Hot Hot,Buster Poindexter & His Banshees Of Blue,84,45,13,happy
@@ -1489,9 +1494,11 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1987-10-03,93,Rev It Up,Newcity Rockers,86,86,4,happy
 1987-10-03,94,He's My Girl,David Hallyday,79,79,6,happy
 1987-10-03,95,We Should Be Sleeping,Eddie Money,90,90,3,happy
+1987-10-03,96,"""Back To Paradise (From """"Revenge Of The Nerds II"""")",Thirty Eight Special,80,41,11,energetic
 1987-10-03,97,These Times Are Hard For Lovers,John Waite,93,53,16,happy
 1987-10-03,98,Heartache,Pepsi & Shirlie,95,78,8,1
 1987-10-03,99,Alone,Heart,96,1,21,0
+1987-10-03,100,"Be There (From """"Beverly Hills Cop II"""")",The Pointer Sisters,87,42,9,energetic
 1987-09-05,1,La Bamba,Los Lobos,1,1,11,happy
 1987-09-05,2,I Just Can't Stop Loving You,Michael Jackson With Siedah Garrett,6,2,5,sad
 1987-09-05,3,Who's That Girl,Madonna,2,1,9,happy
@@ -1532,6 +1539,8 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1987-09-05,38,"Cross My Broken Heart (From ""Beverly Hills Cop II"")",The Jets,28,7,14,happy
 1987-09-05,39,Never Let Me Down,David Bowie,48,39,5,happy
 1987-09-05,40,Fake,Alexander O'Neal,46,40,7,1
+1987-09-05,41,"""Back To Paradise (From """"Revenge Of The Nerds II"""")",Thirty Eight Special,80,41,11,energetic
+1987-09-05,42,"Be There (From """"Beverly Hills Cop II"""")",The Pointer Sisters,49,42,5,energetic
 1987-09-05,43,Jam Tonight,Freddie Jackson,32,32,11,happy
 1987-09-05,44,Victim Of Love,Bryan Adams,54,44,3,happy
 1987-09-05,45,Something Real (Inside Me/Inside You),Mr. Mister,57,45,3,happy
@@ -1657,6 +1666,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1987-08-01,65,Say You Really Want Me,Kim Wilde,73,65,3,happy
 1987-08-01,66,Jump Start,Natalie Cole,87,66,2,happy
 1987-08-01,67,U Got The Look,Prince,,67,1,1
+1987-08-01,68,"""Back To Paradise (From """"Revenge Of The Nerds II"""")",Thirty Eight Special,81,68,2,energetic
 1987-08-01,69,Endless Nights,Eddie Money,62,21,17,happy
 1987-08-01,70,Kiss And Tell,The Breakfast Club,75,70,4,happy
 1987-08-01,71,Fake,Alexander O'Neal,85,71,2,1
@@ -3350,6 +3360,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1986-03-01,60,Your Love,The Outfield,79,60,3,happy
 1986-03-01,61,I Like You,Phyllis Nelson,64,61,4,happy
 1986-03-01,62,Overjoyed,Stevie Wonder,76,62,2,0
+1986-03-01,63,The Super Bowl Shuffle,The Chicago Bears Shufflin' Crew,51,41,8,energetic
 1986-03-01,64,Goodbye,Night Ranger,55,17,17,0
 1986-03-01,65,Jimmy Mack,Sheena Easton,70,65,4,happy
 1986-03-01,66,So Far Away,Dire Straits,,66,1,0
@@ -3386,6 +3397,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1986-03-01,97,Object Of My Desire,Starpoint,81,25,23,1
 1986-03-01,98,Wood Beez (Pray Like Aretha Franklin),Scritti Politti,91,91,4,happy
 1986-03-01,99,Strength,The Alarm,66,61,10,happy
+1986-03-01,100,One Sunny Day (From Quicksilver),"Ray Parker,Jr. & Helen Terry",96,96,3,happy
 1986-02-01,1,That's What Friends Are For,Dionne & Friends,1,1,13,sad
 1986-02-01,2,Burning Heart,Survivor,3,2,14,happy
 1986-02-01,3,I'm Your Man,Wham!,5,3,10,happy
@@ -3441,6 +3453,7 @@ date,rank,song,artist,last-week,peak-rank,weeks-on-board,label
 1986-02-01,53,Another Night,Aretha Franklin,59,53,3,happy
 1986-02-01,54,R.O.C.K. In The U.S.A. (A Salute to 60's Rock),John Mellencamp,,54,1,2
 1986-02-01,55,(How To Be A) Millionaire,ABC,60,55,3,happy
+1986-02-01,56,The Super Bowl Shuffle,The Chicago Bears Shufflin' Crew,84,56,4,energetic
 1986-02-01,57,Own The Night,Chaka Khan,57,57,7,happy
 1986-02-01,58,Let's Go All The Way,Sly Fox,68,58,6,happy
 1986-02-01,59,Night Moves,Marilyn Martin,66,59,3,happy
