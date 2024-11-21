@@ -8,6 +8,7 @@ const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
 const SPOTIFY_GREEN = '#1ed760';
 let hideModalTimeout = 200;
+let selections = 'NO'
 
 let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
@@ -46,7 +47,7 @@ async function setup() {
 
   //line chart
   let lineChartData = await lineChartProcessData(combinedData);
-  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false, eventsData);
+  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false, eventsData, selections);
 
   //circle chart
   let circleChartData = await circleChartProcessData(combinedData);
@@ -67,11 +68,12 @@ async function setup() {
     SvgRankLineChart,
     "Average Rank",
     (flip_y = true),
-    eventsData
+    eventsData, 
+    selections
   );
 
   //stacked area chart
-  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false, eventsData);
+  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false, eventsData, selections);
 
   //legend - chatgpt helped with this
   const legendContainer = d3.select("#legend");
@@ -175,7 +177,7 @@ async function loadEventData() {
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
+function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selections) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   console.log("Event data" + eventsData);
@@ -275,16 +277,14 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
     .enter()
     .append("circle")
     .attr("class", "event-dot")
+    .attr("id", (d) => "dot-" + d.title)
     .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
     .attr("cy", 0)
     .attr("r", 7)
-    .attr("fill", SPOTIFY_GREEN)
-    .on("mouseover", function (event, d) {
-      showModal(d.title, d.description);
+    .on("click", function (event, d) {
+      selections = handleEventClick(d, eventOverlay,selections, this)
     })
-    .on("mouseout", function () {
-      hideModal()
-    });
+
 
 
 }
@@ -294,8 +294,8 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
  * @param {string} title - The title to display in the modal.
  * @param {string} description - The description to display in the modal.
  */
-function showModal(title, description) {
-  new Promise(resolve => setTimeout(resolve, 10));
+function showModal(title, description, selections) {
+
  
   const modal = document.getElementById("event-modal");
 
@@ -335,7 +335,15 @@ function showModal(title, description) {
   // Show the modal
   modal.style.display = "block";
 
-  return new Promise(resolve => setTimeout(resolve, 200));
+  // Add event listener to close the modal
+  const closeButton = modal.querySelector(".close"); // Assuming there's a close button in the modal
+  closeButton.addEventListener("click", function() {
+    // Change class of all D3 elements with class 'a' to class 'b'
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
+    selections = "no"
+    modal.style.display = "none"; // Hide the modal
+  });
+
 }
 
 /**
@@ -354,7 +362,7 @@ function hideModal() {
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
+function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData, selections) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   //copilot helped me with this
@@ -444,6 +452,7 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
       .enter()
       .append("line")
       .attr("class", "event-line")
+      .attr("id",(d) =>  "line-" +d.title)
       .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
       .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
       .attr("y1", 0)
@@ -458,19 +467,51 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData) {
       .enter()
       .append("circle")
       .attr("class", "event-dot")
+      .attr("id", (d) => "dot-" + d.title)
       .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
       .attr("cy", 0)
       .attr("r", 7)
-      .attr("fill", SPOTIFY_GREEN)
-      .on("mouseover", function (event, d) {
-
-        showModal(d.title, d.description);
+      .on("click", function (event, d) {
+        selections = handleEventClick(d, eventOverlay,selections, this)
       })
-      .on("mouseout", function () {
-        setTimeout(hideModal, 200); // Add a small delay before hiding the modal
-      });
+
+  
   
 }
+
+/**
+ * This function contains all of the logic necessary for clicking on a historical event on the webpage. 
+ * @param {*} element the svg element being clicked
+ * @param {*} data the data of the svg element. 
+ */
+function handleEventClick(data, svg, selections, element)
+{
+
+  if (selections == element)
+  {
+     //deselct everything
+     d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
+     hideModal()
+     return "no"
+  }
+  else
+  {
+     //deselct everything
+     d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    hideModal()
+
+    //select the clicked element
+    d3.select(element).attr("class", "event-dot-selected").attr("r", 20)
+    showModal(data.title, data.description, selections)
+    return element
+
+
+
+  }
+
+}
+
+
 
 /**
  * Updates the circle chart with data for a specified year.
