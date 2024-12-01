@@ -121,7 +121,25 @@
         pointer-events: auto;
       }
 
+      .linechart-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
 
+      #Linechart-div {
+        width: 100%;
+      }
+
+      #checkable-legend {
+        margin-top: 20px;
+      }
+
+      .checkable-legend {
+        display: flex;
+        flex-direction: column;
+        margin-left: 20px;
+      }
 
       .close {
         color: #aaa;
@@ -175,7 +193,10 @@
     <div class="row chart">
       <div class="chart">
         <h2 id="line-chart-header">Line Chart - Song Emotion Count</h2>
-        <div id="Linechart-div"></div>
+        <div class="linechart-container">
+          <div id="Linechart-div"></div>
+          <div id="checkable-legend"></div>
+        </div>
         <h3>
           This chart shows the total number of songs for each of the given
           emotions that appear in the top 100 for that year.

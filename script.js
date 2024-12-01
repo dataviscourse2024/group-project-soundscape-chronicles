@@ -88,6 +88,28 @@ async function setup() {
       .style("background-color", color);
     legendItem.append("span").text(key);
   }
+
+  // Checkable legend
+  const checkableLegendContainer = d3.select("#checkable-legend");
+  const checkableLegend = checkableLegendContainer.append("div").attr("class", "checkable-legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const legendItem = checkableLegend.append("div").attr("class", "legend-item");
+    legendItem
+      .append("input")
+      .attr("type", "checkbox")
+      .attr("id", `checkbox-${key}`)
+      .attr("checked", true)
+      .on("change", function() {
+        updateSelectedEmotions(lineChartData, SvgLineChart, eventsData);
+      });
+    legendItem
+      .append("label")
+      .attr("for", `checkbox-${key}`)
+      .style("color", color)
+      .text(key);
+  }
 }
 
 /**
@@ -167,6 +189,22 @@ async function loadEventData() {
   });
 
   return eventsData;
+}
+
+/**
+ * Updates the line chart based on the selected emotions.
+ * @function updateSelectedEmotions
+ * @param {Array} data - The original data for the line chart.
+ * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {Array} eventsData - The historical events data.
+ */
+function updateSelectedEmotions(data, SvgChart, eventsData) {
+  const selectedEmotions = Object.keys(emotionColors).filter(key => {
+    return d3.select(`#checkbox-${key}`).property("checked");
+  });
+
+  const filteredData = data.filter(d => selectedEmotions.includes(d.label));
+  updateLineChart(filteredData, SvgChart, "Song Emotion Count", false, eventsData, selections);
 }
 
 /**
