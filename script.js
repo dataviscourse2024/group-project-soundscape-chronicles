@@ -489,11 +489,13 @@ function updateLineChart(
 
   //adding axis labels
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
@@ -706,10 +708,12 @@ function updateAreaChart(
   //adding axis labelså
   SvgChart.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
@@ -1129,11 +1133,13 @@ function updateStackedBarChart(data, eventsData) {
   //adding axis labels
   SvgStackedBar.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgStackedBar.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
