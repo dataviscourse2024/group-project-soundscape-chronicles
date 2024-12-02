@@ -1,3 +1,4 @@
+// import * as d3 from 'd3';
 // CHATGPT wrote all of our JDOC function headers
 
 const CHART_WIDTH = 650;
@@ -9,7 +10,12 @@ const ANIMATION_DUATION = 300;
 const SPOTIFY_GREEN = '#1ed760';
 let hideModalTimeout = 200;
 let selections = 'NO'
-
+let rawData = [];
+let originalLineChartData = [];
+let eventsData = [];
+let isZoomedIn = false;
+let zoomedInData = [];
+let selectedEmotions;
 let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
 const emotionColors = {
@@ -43,10 +49,11 @@ async function setup() {
   SvgAreaChart = createChartSVG("#AreaChart-div");
 
   let combinedData = await loadData();
-  let eventsData = await loadEventData();
+  eventsData = await loadEventData();
 
   //line chart
   let lineChartData = await lineChartProcessData(combinedData);
+  originalLineChartData = lineChartData;
   updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false, eventsData, selections);
 
   //circle chart
@@ -110,6 +117,8 @@ async function setup() {
       .style("color", color)
       .text(key);
   }
+
+  selectedEmotions = Object.keys(emotionColors);
 }
 
 /**
@@ -163,6 +172,7 @@ async function loadData() {
     })
     .then((data) => {
       combinedData = data;
+      rawData = data;
       return combinedData;
     })
     .catch((error) => {
@@ -199,12 +209,71 @@ async function loadEventData() {
  * @param {Array} eventsData - The historical events data.
  */
 function updateSelectedEmotions(data, SvgChart, eventsData) {
-  const selectedEmotions = Object.keys(emotionColors).filter(key => {
+  selectedEmotions = Object.keys(emotionColors).filter(key => {
     return d3.select(`#checkbox-${key}`).property("checked");
   });
 
-  const filteredData = data.filter(d => selectedEmotions.includes(d.label));
+  const dataToFilter = isZoomedIn ? zoomedInData : data;
+
+  const filteredData = dataToFilter.filter(d => selectedEmotions.includes(d.label));
   updateLineChart(filteredData, SvgChart, "Song Emotion Count", false, eventsData, selections);
+}
+
+/**
+ * This function contains all of the logic necessary for clicking on a historical event on the webpage. 
+ * @param {*} element the svg element being clicked
+ * @param {*} eventData the data of the svg element. 
+ */
+async function handleEventClick(eventData, svg, selections, element, combinedData, eventsData)
+{
+  if (selections == element)
+  {
+     //deselct everything
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
+    hideModal()
+    isZoomedIn = false;
+    d3.selectAll(".event-line").attr("display", null);
+    d3.selectAll(".event-dot").attr("display", null);
+    return "no"
+  }
+  else
+  {
+     //deselct everything
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    hideModal()
+
+    //select the clicked element
+    d3.select(element).attr("class", "event-dot-selected").attr("r", 20)
+    showModal(eventData.title, eventData.description, selections)
+
+    // Calculate the date range (3 months prior and 9 months after the event)
+    const eventDate = new Date(eventData.date);
+    console.log("Event date: " + eventDate);
+    const dateStart = new Date(eventDate);
+    dateStart.setMonth(eventDate.getMonth() - 3);
+    const dateEnd = new Date(eventDate);
+    dateEnd.setMonth(eventDate.getMonth() + 9);
+
+    // Process the data for the specified date range
+    const monthlyData = await lineChartProcessDataByMonth(rawData, dateStart, dateEnd);
+    const filteredMonthlyData = monthlyData.filter(d => selectedEmotions.includes(d.label));
+    isZoomedIn = true;
+    zoomedInData = monthlyData;
+
+    // Hide all event lines and dots other than the current event
+    d3.selectAll(".event-line").attr("display", "none");
+    d3.selectAll(".event-dot").attr("display", "none");
+    d3.select(`#line-${CSS.escape(eventData.title)}`).attr("display", null);
+    d3.select(`#dot-${CSS.escape(eventData.title)}`).attr("display", null);
+    const filteredEventsData = eventsData.filter(d => d.title === eventData.title);
+
+    // Redraw the chart with the processed monthly data
+    updateLineChart(filteredMonthlyData, svg, "Song Emotion Count", false, filteredEventsData, selections);
+
+    return element;
+
+  }
+
 }
 
 /**
@@ -218,12 +287,15 @@ function updateSelectedEmotions(data, SvgChart, eventsData) {
 function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selections) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
-  console.log("Event data" + eventsData);
+  // console.log("Event data" + eventsData);
+
+  const timeKey = data[0].year ? 'year' : 'yearMonth';
+  const timeFormat = timeKey === 'year' ? d3.timeFormat("%Y") : d3.timeFormat("%Y-%m");
 
   //copilot helped me with this
   let xScale = d3
     .scalePoint()
-    .domain(data.map((d) => d.year))
+    .domain(data.map((d) => d[timeKey]))
     .range([0, INNER_WIDTH]);
 
   //copilot helped me with this
@@ -242,41 +314,54 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
 
   const lineGenerator = d3
     .line()
-    .x((d) => xScale(d.year))
+    .x((d) => xScale(d[timeKey]))
     .y((d) => yScale(d.count));
 
   SvgChart.selectAll("*").remove();
 
-  //apending axis
+  //appending axis
   SvgChart.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
+    .transition()
+    .duration(1000)
     .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
 
-  SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
+  SvgChart.append("g")
+    .attr("class", "yAxis")
+    .transition()
+    .duration(1000)
+    .call(d3.axisLeft(yScale));
 
   SvgChart.select(".xAxis path").attr("stroke", "white");
-
   SvgChart.selectAll(".xAxis .tick line").attr("stroke", "white");
-
   SvgChart.select(".yAxis path").attr("stroke", "white");
-
   SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
 
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
 
-    //creating line
-    SvgChart.append("path")
-      .datum(emotionData)
-      .attr("class", "line")
+    let linePath = SvgChart.selectAll(`.line-${emotion}`)
+      .data([emotionData]);
+
+    // Enter new lines
+    linePath.enter()
+      .append("path")
+      .attr("class", `line line-${emotion}`)
       .attr("fill", "none")
       .attr("stroke", emotionColors[emotion])
       .attr("stroke-width", 1.5)
       .attr("d", lineGenerator)
-      // copilot helped here
-      .attr("opacity", 1);
+      .attr("opacity", 1)
+      .merge(linePath)
+      .transition()
+      .duration(1000)
+      .ease(d3.easeLinear)
+      .attr("d", lineGenerator);
+
+    // Remove old lines
+    linePath.exit().remove();
   }
 
   //adding axis labels
@@ -294,37 +379,37 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
 
   //copilot helped w this
   const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
-  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
 
   eventOverlay.selectAll(".event-line")
     .data(eventsData)
     .enter()
     .append("line")
     .attr("class", "event-line")
-    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("id", (d) => `line-${CSS.escape(d.title)}`)
+    .attr("x1", (d) => xScale(timeFormat(d.date)))
+    .attr("x2", (d) => xScale(timeFormat(d.date)))
     .attr("y1", 0)
     .attr("y2", INNER_HEIGHT)
     .attr("stroke", SPOTIFY_GREEN)
-    .attr("stroke-width", 1);
+    .attr("stroke-width", 1)
+    .transition()
+    .duration(1000)
+    .attr("y2", INNER_HEIGHT);
 
-  
-
-    eventOverlay.selectAll(".event-dot")
+  eventOverlay.selectAll(".event-dot")
     .data(eventsData)
     .enter()
     .append("circle")
     .attr("class", "event-dot")
-    .attr("id", (d) => "dot-" + d.title)
-    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("id", (d) => `dot-${CSS.escape(d.title)}`)
+    .attr("cx", (d) => xScale(timeFormat(d.date)))
     .attr("cy", 0)
     .attr("r", 7)
     .on("click", function (event, d) {
-      selections = handleEventClick(d, eventOverlay,selections, this)
+      selections = handleEventClick(d, SvgChart, selections, this, data, eventsData)
     })
-
-
-
+    .transition()
+    .duration(1000);
 }
 /**
  * Shows the event modal with a title, description, and positions it relative to the mouse.
@@ -391,7 +476,13 @@ function showModal(title, description, selections) {
 function hideModal() {
   const modal = document.getElementById("event-modal");
   modal.style.display = "none";
+  isZoomedIn = false;
+  zoomedInData = [];
+  // filter original line chart dtaa to include selected emotions
+  const currentData = originalLineChartData.filter(d => selectedEmotions.includes(d.label));
+  updateLineChart(currentData, SvgLineChart, "Song Emotion Count", false, eventsData, selections);
 }
+
 /**
  * Updates an area chart with provided data.
  * @function updateAreaChart
@@ -510,43 +601,11 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
       .attr("cy", 0)
       .attr("r", 7)
       .on("click", function (event, d) {
-        selections = handleEventClick(d, eventOverlay,selections, this)
+        selections = handleEventClick(d, eventOverlay, selections, this, data)
       })
 
   
   
-}
-
-/**
- * This function contains all of the logic necessary for clicking on a historical event on the webpage. 
- * @param {*} element the svg element being clicked
- * @param {*} data the data of the svg element. 
- */
-function handleEventClick(data, svg, selections, element)
-{
-
-  if (selections == element)
-  {
-     //deselct everything
-     d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
-     hideModal()
-     return "no"
-  }
-  else
-  {
-     //deselct everything
-     d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
-    hideModal()
-
-    //select the clicked element
-    d3.select(element).attr("class", "event-dot-selected").attr("r", 20)
-    showModal(data.title, data.description, selections)
-    return element
-
-
-
-  }
-
 }
 
 
@@ -647,6 +706,64 @@ async function lineChartProcessData(data) {
       });
     }
   }
+  return musicTypeCount;
+}
+
+/**
+ * Processes data for the line chart by calculating monthly emotion counts within a specified date range.
+ * Written by github copilot based on above method
+ *  @async
+ * @function lineChartProcessDataByMonth
+ * @param {Array} data - The raw data to process.
+ * @param {Date} dateStart - The start date of the range.
+ * @param {Date} dateEnd - The end date of the range.
+ * @returns {Promise<Array>} - Returns a Promise with the processed data for the line chart.
+ */
+async function lineChartProcessDataByMonth(data, dateStart, dateEnd) {
+  let emotionTotals = {};
+  console.log("Date range:", dateStart, dateEnd);
+
+  // Filter data within the specified date range
+  const parseDate = d3.timeParse("%Y-%m-%d"); 
+  const filteredData = data.filter((d) => {
+    const date = parseDate(d.date);
+    return date >= dateStart && date <= dateEnd;
+  });
+
+  console.log("Filtered data length:", filteredData.length);
+
+  // Process the filtered data
+  filteredData.forEach((d) => {
+    const date = new Date(d.date);
+    date.setDate(date.getDate() + 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; 
+    const label = d.label;
+    const yearMonth = `${year}-${month.toString().padStart(2, '0')}`;
+
+    if (!emotionTotals[yearMonth]) {
+      emotionTotals[yearMonth] = {
+        happy: 0,
+        sad: 0,
+        energetic: 0,
+        calm: 0,
+      };
+    }
+    emotionTotals[yearMonth][label] += 1;
+  });
+
+  const musicTypeCount = [];
+  for (const yearMonth in emotionTotals) {
+    for (const label in emotionTotals[yearMonth]) {
+      musicTypeCount.push({
+        yearMonth: yearMonth,
+        label: label,
+        count: emotionTotals[yearMonth][label],
+      });
+    }
+  }
+
+  console.log("Music type count: " + musicTypeCount);
   return musicTypeCount;
 }
 
