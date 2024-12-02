@@ -100,6 +100,9 @@
       #circle-label {
         color: white;
       }
+      #stackedbar-label {
+        color: white;
+      }
       .modal {
         display: none;
         position: fixed;
@@ -155,14 +158,12 @@
         cursor: pointer;
       }
 
-
-      .event-dot{
+      .event-dot {
         fill: #1ed760;
       }
-      .event-dot-selected{
-        fill: #88ebac
+      .event-dot-selected {
+        fill: #88ebac;
       }
-
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
@@ -183,7 +184,9 @@
       emotional trends over time.
     </h3>
     <h3>
-      Click on one of the circles to read more about the historical event, when you're finished, simply click the X on the text box, click on the circle again, or click on another circle to continue reading.
+      Click on one of the circles to read more about the historical event, when
+      you're finished, simply click the X on the text box, click on the circle
+      again, or click on another circle to continue reading.
     </h3>
     <!-- <div class = "video">
       <h2 id = "video header">About us</h2>
@@ -216,15 +219,27 @@
       <div class="chart">
         <h2 id="circle-chart-header">Circle Chart - Song Emotion</h2>
         <div id="Circle-div"></div>
-        <input
-          type="range"
-          id="circle-slider"
-          min="2000"
-          max="2024"
-          step="1"
-          value="2024"
-        />
-        <label for="circle-slider" id="circle-label">Year: 2024</label>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 100px;
+          "
+        >
+          <div style="padding-bottom: 15px">
+            <input
+              type="range"
+              id="circle-slider"
+              min="2000"
+              max="2024"
+              step="1"
+              value="2024"
+            />
+            <label for="circle-slider" id="circle-label">Year: 2024</label>
+          </div>
+          <div id="circle-legend"></div>
+        </div>
         <h3>
           The size of each circle represents the number of songs for each
           emotion that appear in the top 100 that year. Use the slider above to
@@ -237,6 +252,29 @@
           Stacked Bar Chart - Type of Emotion Listened Ratio
         </h2>
         <div id="Stackedbar-div"></div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 100px;
+          "
+        >
+          <div style="padding-bottom: 15px">
+            <input
+              type="range"
+              id="stackedbar-slider"
+              min="2000"
+              max="2024"
+              step="1"
+              value="2024"
+            />
+            <label for="stackedbar-slider" id="stackedbar-label"
+              >Year: 2024</label
+            >
+          </div>
+          <div id="stacked-legend"></div>
+        </div>
         <h3>
           This chart shows the proportion of songs for the given emotion that
           appear in the top 100 for that year. For more accruate numbers, hover
@@ -248,6 +286,16 @@
       <div class="chart">
         <h2 id="area-chart-header">Area Chart - Song Emotion Count</h2>
         <div id="AreaChart-div"></div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 100px;
+          "
+        >
+          <div id="area-legend"></div>
+        </div>
         <h3>
           This chart shows the total number of songs for each of the given
           emotions that appear in the top 100 for that year.
