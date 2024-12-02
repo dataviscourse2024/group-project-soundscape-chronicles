@@ -73,7 +73,6 @@ async function setup() {
 
   //stacked bar chart
   let stackBarChartData = await stackedBarChartProcessData(combinedData);
-  createSliderFoStackedBarChart(stackBarChartData);
   updateStackedBarChart(stackBarChartData, eventsData);
 
   //rank line chart
@@ -189,6 +188,32 @@ async function setup() {
       .text(key);
   }
 
+  // Checkable legend
+  const checkableLegendTwoContainer = d3.select("#checkable-legend-two");
+  const checkableTwoLegend = checkableLegendTwoContainer
+    .append("div")
+    .attr("class", "checkable-legend-two");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const legendItem = checkableTwoLegend
+      .append("div")
+      .attr("class", "legend-item");
+    legendItem
+      .append("input")
+      .attr("type", "checkbox")
+      .attr("id", `checkbox-two-${key}`)
+      .attr("checked", true)
+      .on("change", function () {
+        updateRankSelectedEmotions(rankLineData, SvgRankLineChart, eventsData);
+      });
+    legendItem
+      .append("label")
+      .attr("for", `checkbox-two-${key}`)
+      .style("color", color)
+      .text(key);
+  }
+
   selectedEmotions = Object.keys(emotionColors);
 }
 
@@ -224,25 +249,6 @@ function createSliderForCircleChart(data) {
   slider.addEventListener("input", function () {
     document.getElementById("circle-label").innerText = this.value;
     updateCircleChart(data, this.value);
-  });
-}
-
-/**
- * creating slider for stacked bar chart and adding listener for updates
- * @param {Array} data - The data to update circle chart with
- */
-function createSliderFoStackedBarChart(data) {
-  const years = data.map((d) => d.year);
-  let slider = document.getElementById("stackedbar-slider");
-  const min = Math.min(...years);
-  slider.min = min;
-  slider.max = Math.max(...years);
-  slider.value = min;
-  document.getElementById("stackedbar-label").innerText = min;
-  document.getElementById("stackedbar-slider").value = min;
-  slider.addEventListener("input", function () {
-    document.getElementById("stackedbar-label").innerText = this.value;
-    // updateStackedBarChart(data, this.value);
   });
 }
 
@@ -313,6 +319,34 @@ function updateSelectedEmotions(data, SvgChart, eventsData) {
     SvgChart,
     "Song Emotion Count",
     false,
+    eventsData,
+    selections
+  );
+}
+
+/**
+ * Updates the line chart based on the selected emotions.
+ * @function updateSelectedEmotions
+ * @param {Array} data - The original data for the line chart.
+ * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {Array} eventsData - The historical events data.
+ */
+function updateRankSelectedEmotions(data, SvgChart, eventsData) {
+  selectedEmotions = Object.keys(emotionColors).filter((key) => {
+    return d3.select(`#checkbox-two-${key}`).property("checked");
+  });
+
+  const dataToFilter = isZoomedIn ? zoomedInData : data;
+
+  const filteredData = dataToFilter.filter((d) =>
+    selectedEmotions.includes(d.label)
+  );
+
+  updateLineChart(
+    filteredData,
+    SvgChart,
+    "Average Rank",
+    (flip_y = true),
     eventsData,
     selections
   );

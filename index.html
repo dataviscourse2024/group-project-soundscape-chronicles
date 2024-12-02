@@ -152,6 +152,15 @@
         margin-left: 20px;
       }
 
+      #checkable-legend-two {
+        margin-top: 20px;
+      }
+
+      .checkable-legend-two {
+        display: flex;
+        flex-direction: column;
+        margin-left: 20px;
+      }
       .close {
         color: #aaa;
         float: right;
@@ -216,7 +225,10 @@
 
       <div class="chart">
         <h2 id="rank-line-chart-header">Line Chart - Average Rank Per Year</h2>
-        <div id="rankLineChart-div"></div>
+        <div class="linechart-container">
+          <div id="rankLineChart-div"></div>
+          <div id="checkable-legend-two"></div>
+        </div>
         <h3>
           This chart shows the average rank on the top 100 for each of the given
           emotions that appear in the top 100 for that year.
@@ -268,19 +280,6 @@
             gap: 100px;
           "
         >
-          <div style="padding-bottom: 15px">
-            <input
-              type="range"
-              id="stackedbar-slider"
-              min="2000"
-              max="2024"
-              step="1"
-              value="2024"
-            />
-            <label for="stackedbar-slider" id="stackedbar-label"
-              >Year: 2024</label
-            >
-          </div>
           <div id="stacked-legend"></div>
         </div>
         <h3>
