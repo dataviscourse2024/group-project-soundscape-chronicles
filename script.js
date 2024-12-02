@@ -7,9 +7,9 @@ const MARGIN = { left: 70, bottom: 40, top: 20, right: 20 };
 const INNER_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
-const SPOTIFY_GREEN = '#1ed760';
+const SPOTIFY_GREEN = "#1ed760";
 let hideModalTimeout = 200;
-let selections = 'NO'
+let selections = "NO";
 let rawData = [];
 let originalLineChartData = [];
 let eventsData = [];
@@ -54,7 +54,14 @@ async function setup() {
   //line chart
   let lineChartData = await lineChartProcessData(combinedData);
   originalLineChartData = lineChartData;
-  updateLineChart(lineChartData, SvgLineChart, "Song Emotion Count", false, eventsData, selections);
+  updateLineChart(
+    lineChartData,
+    SvgLineChart,
+    "Song Emotion Count",
+    false,
+    eventsData,
+    selections
+  );
 
   //circle chart
   let circleChartData = await circleChartProcessData(combinedData);
@@ -75,12 +82,19 @@ async function setup() {
     SvgRankLineChart,
     "Average Rank",
     (flip_y = true),
-    eventsData, 
+    eventsData,
     selections
   );
 
   //stacked area chart
-  updateAreaChart(lineChartData, SvgAreaChart, "Song Emotion Count", false, eventsData, selections);
+  updateAreaChart(
+    lineChartData,
+    SvgAreaChart,
+    "Song Emotion Count",
+    false,
+    eventsData,
+    selections
+  );
 
   //legend - chatgpt helped with this
   const legendContainer = d3.select("#legend");
@@ -96,24 +110,106 @@ async function setup() {
     legendItem.append("span").text(key);
   }
 
-  // Checkable legend
-  const checkableLegendContainer = d3.select("#checkable-legend");
-  const checkableLegend = checkableLegendContainer.append("div").attr("class", "checkable-legend");
+  //legend - chatgpt helped with this
+  const circlelegendContainer = d3.select("#circle-legend");
+  const circlelegend = circlelegendContainer
+    .append("div")
+    .attr("class", "legend");
 
   for (const key of Object.keys(emotionColors)) {
     const color = emotionColors[key];
-    const legendItem = checkableLegend.append("div").attr("class", "legend-item");
+    const circlelegendItem = circlelegend
+      .append("div")
+      .attr("class", "legend-item");
+    circlelegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    circlelegendItem.append("span").text(key);
+  }
+
+  //legend - chatgpt helped with this
+  const stackedlegendContainer = d3.select("#stacked-legend");
+  const stackedlegend = stackedlegendContainer
+    .append("div")
+    .attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const stackedlegendItem = stackedlegend
+      .append("div")
+      .attr("class", "legend-item");
+    stackedlegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    stackedlegendItem.append("span").text(key);
+  }
+
+  //legend - chatgpt helped with this
+  const arealegendContainer = d3.select("#area-legend");
+  const arealegend = arealegendContainer.append("div").attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const arealegendItem = arealegend
+      .append("div")
+      .attr("class", "legend-item");
+    arealegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    arealegendItem.append("span").text(key);
+  }
+
+  // Checkable legend
+  const checkableLegendContainer = d3.select("#checkable-legend");
+  const checkableLegend = checkableLegendContainer
+    .append("div")
+    .attr("class", "checkable-legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const legendItem = checkableLegend
+      .append("div")
+      .attr("class", "legend-item");
     legendItem
       .append("input")
       .attr("type", "checkbox")
       .attr("id", `checkbox-${key}`)
       .attr("checked", true)
-      .on("change", function() {
+      .on("change", function () {
         updateSelectedEmotions(lineChartData, SvgLineChart, eventsData);
       });
     legendItem
       .append("label")
       .attr("for", `checkbox-${key}`)
+      .style("color", color)
+      .text(key);
+  }
+
+  // Checkable legend
+  const checkableLegendTwoContainer = d3.select("#checkable-legend-two");
+  const checkableTwoLegend = checkableLegendTwoContainer
+    .append("div")
+    .attr("class", "checkable-legend-two");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const legendItem = checkableTwoLegend
+      .append("div")
+      .attr("class", "legend-item");
+    legendItem
+      .append("input")
+      .attr("type", "checkbox")
+      .attr("id", `checkbox-two-${key}`)
+      .attr("checked", true)
+      .on("change", function () {
+        updateRankSelectedEmotions(rankLineData, SvgRankLineChart, eventsData);
+      });
+    legendItem
+      .append("label")
+      .attr("for", `checkbox-two-${key}`)
       .style("color", color)
       .text(key);
   }
@@ -194,7 +290,7 @@ async function loadEventData() {
   const eventsData = d3.csvParse(eventsText);
 
   // Parse event dates
-  eventsData.forEach(event => {
+  eventsData.forEach((event) => {
     event.date = d3.timeParse("%Y-%m")(event.date);
   });
 
@@ -209,42 +305,82 @@ async function loadEventData() {
  * @param {Array} eventsData - The historical events data.
  */
 function updateSelectedEmotions(data, SvgChart, eventsData) {
-  selectedEmotions = Object.keys(emotionColors).filter(key => {
+  selectedEmotions = Object.keys(emotionColors).filter((key) => {
     return d3.select(`#checkbox-${key}`).property("checked");
   });
 
   const dataToFilter = isZoomedIn ? zoomedInData : data;
 
-  const filteredData = dataToFilter.filter(d => selectedEmotions.includes(d.label));
-  updateLineChart(filteredData, SvgChart, "Song Emotion Count", false, eventsData, selections);
+  const filteredData = dataToFilter.filter((d) =>
+    selectedEmotions.includes(d.label)
+  );
+  updateLineChart(
+    filteredData,
+    SvgChart,
+    "Song Emotion Count",
+    false,
+    eventsData,
+    selections
+  );
 }
 
 /**
- * This function contains all of the logic necessary for clicking on a historical event on the webpage. 
- * @param {*} element the svg element being clicked
- * @param {*} eventData the data of the svg element. 
+ * Updates the line chart based on the selected emotions.
+ * @function updateSelectedEmotions
+ * @param {Array} data - The original data for the line chart.
+ * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {Array} eventsData - The historical events data.
  */
-async function handleEventClick(eventData, svg, selections, element, combinedData, eventsData)
-{
-  if (selections == element)
-  {
-     //deselct everything
-    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
-    hideModal()
+function updateRankSelectedEmotions(data, SvgChart, eventsData) {
+  selectedEmotions = Object.keys(emotionColors).filter((key) => {
+    return d3.select(`#checkbox-two-${key}`).property("checked");
+  });
+
+  const dataToFilter = isZoomedIn ? zoomedInData : data;
+
+  const filteredData = dataToFilter.filter((d) =>
+    selectedEmotions.includes(d.label)
+  );
+
+  updateLineChart(
+    filteredData,
+    SvgChart,
+    "Average Rank",
+    (flip_y = true),
+    eventsData,
+    selections
+  );
+}
+
+/**
+ * This function contains all of the logic necessary for clicking on a historical event on the webpage.
+ * @param {*} element the svg element being clicked
+ * @param {*} eventData the data of the svg element.
+ */
+async function handleEventClick(
+  eventData,
+  svg,
+  selections,
+  element,
+  combinedData,
+  eventsData
+) {
+  if (selections == element) {
+    //deselct everything
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    hideModal();
     isZoomedIn = false;
     d3.selectAll(".event-line").attr("display", null);
     d3.selectAll(".event-dot").attr("display", null);
-    return "no"
-  }
-  else
-  {
-     //deselct everything
+    return "no";
+  } else {
+    //deselct everything
     d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
-    hideModal()
+    hideModal();
 
     //select the clicked element
-    d3.select(element).attr("class", "event-dot-selected").attr("r", 20)
-    showModal(eventData.title, eventData.description, selections)
+    d3.select(element).attr("class", "event-dot-selected").attr("r", 20);
+    showModal(eventData.title, eventData.description, selections);
 
     // Calculate the date range (3 months prior and 9 months after the event)
     const eventDate = new Date(eventData.date);
@@ -255,8 +391,14 @@ async function handleEventClick(eventData, svg, selections, element, combinedDat
     dateEnd.setMonth(eventDate.getMonth() + 9);
 
     // Process the data for the specified date range
-    const monthlyData = await lineChartProcessDataByMonth(rawData, dateStart, dateEnd);
-    const filteredMonthlyData = monthlyData.filter(d => selectedEmotions.includes(d.label));
+    const monthlyData = await lineChartProcessDataByMonth(
+      rawData,
+      dateStart,
+      dateEnd
+    );
+    const filteredMonthlyData = monthlyData.filter((d) =>
+      selectedEmotions.includes(d.label)
+    );
     isZoomedIn = true;
     zoomedInData = monthlyData;
 
@@ -265,15 +407,22 @@ async function handleEventClick(eventData, svg, selections, element, combinedDat
     d3.selectAll(".event-dot").attr("display", "none");
     d3.select(`#line-${CSS.escape(eventData.title)}`).attr("display", null);
     d3.select(`#dot-${CSS.escape(eventData.title)}`).attr("display", null);
-    const filteredEventsData = eventsData.filter(d => d.title === eventData.title);
+    const filteredEventsData = eventsData.filter(
+      (d) => d.title === eventData.title
+    );
 
     // Redraw the chart with the processed monthly data
-    updateLineChart(filteredMonthlyData, svg, "Song Emotion Count", false, filteredEventsData, selections);
+    updateLineChart(
+      filteredMonthlyData,
+      svg,
+      "Song Emotion Count",
+      false,
+      filteredEventsData,
+      selections
+    );
 
     return element;
-
   }
-
 }
 
 /**
@@ -284,13 +433,21 @@ async function handleEventClick(eventData, svg, selections, element, combinedDat
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selections) {
+function updateLineChart(
+  data,
+  SvgChart,
+  y_axis_label,
+  flip_y,
+  eventsData,
+  selections
+) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   // console.log("Event data" + eventsData);
 
-  const timeKey = data[0].year ? 'year' : 'yearMonth';
-  const timeFormat = timeKey === 'year' ? d3.timeFormat("%Y") : d3.timeFormat("%Y-%m");
+  const timeKey = data[0].year ? "year" : "yearMonth";
+  const timeFormat =
+    timeKey === "year" ? d3.timeFormat("%Y") : d3.timeFormat("%Y-%m");
 
   //copilot helped me with this
   let xScale = d3
@@ -342,11 +499,11 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
 
-    let linePath = SvgChart.selectAll(`.line-${emotion}`)
-      .data([emotionData]);
+    let linePath = SvgChart.selectAll(`.line-${emotion}`).data([emotionData]);
 
     // Enter new lines
-    linePath.enter()
+    linePath
+      .enter()
       .append("path")
       .attr("class", `line line-${emotion}`)
       .attr("fill", "none")
@@ -366,11 +523,13 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
 
   //adding axis labels
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
@@ -380,7 +539,8 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
   //copilot helped w this
   const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
 
-  eventOverlay.selectAll(".event-line")
+  eventOverlay
+    .selectAll(".event-line")
     .data(eventsData)
     .enter()
     .append("line")
@@ -396,7 +556,8 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
     .duration(1000)
     .attr("y2", INNER_HEIGHT);
 
-  eventOverlay.selectAll(".event-dot")
+  eventOverlay
+    .selectAll(".event-dot")
     .data(eventsData)
     .enter()
     .append("circle")
@@ -406,7 +567,14 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
     .attr("cy", 0)
     .attr("r", 7)
     .on("click", function (event, d) {
-      selections = handleEventClick(d, SvgChart, selections, this, data, eventsData)
+      selections = handleEventClick(
+        d,
+        SvgChart,
+        selections,
+        this,
+        data,
+        eventsData
+      );
     })
     .transition()
     .duration(1000);
@@ -418,10 +586,7 @@ function updateLineChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
  * @param {string} description - The description to display in the modal.
  */
 function showModal(title, description, selections) {
-
- 
   const modal = document.getElementById("event-modal");
-
 
   // Set modal content
   modal.querySelector(".modal-title").textContent = title;
@@ -460,13 +625,12 @@ function showModal(title, description, selections) {
 
   // Add event listener to close the modal
   const closeButton = modal.querySelector(".close"); // Assuming there's a close button in the modal
-  closeButton.addEventListener("click", function() {
+  closeButton.addEventListener("click", function () {
     // Change class of all D3 elements with class 'a' to class 'b'
-    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7)
-    selections = "no"
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    selections = "no";
     modal.style.display = "none"; // Hide the modal
   });
-
 }
 
 /**
@@ -479,8 +643,17 @@ function hideModal() {
   isZoomedIn = false;
   zoomedInData = [];
   // filter original line chart dtaa to include selected emotions
-  const currentData = originalLineChartData.filter(d => selectedEmotions.includes(d.label));
-  updateLineChart(currentData, SvgLineChart, "Song Emotion Count", false, eventsData, selections);
+  const currentData = originalLineChartData.filter((d) =>
+    selectedEmotions.includes(d.label)
+  );
+  updateLineChart(
+    currentData,
+    SvgLineChart,
+    "Song Emotion Count",
+    false,
+    eventsData,
+    selections
+  );
 }
 
 /**
@@ -491,7 +664,14 @@ function hideModal() {
  * @param {string} y_axis_label - Label for the y-axis.
  * @param {boolean} flip_y - Whether to invert the y-axis scale.
  */
-function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData, selections) {
+function updateAreaChart(
+  data,
+  SvgChart,
+  y_axis_label,
+  flip_y,
+  eventsData,
+  selections
+) {
   //https://d3-graph-gallery.com/graph/line_basic.html
 
   //copilot helped me with this
@@ -545,11 +725,10 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
 
   SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
 
-  console.log(data)
+  console.log(data);
   //copilot helped me with this
   for (const emotion of Object.keys(emotionColors)) {
     const emotionData = data.filter((d) => d.label === emotion);
-
 
     //creating line
     SvgChart.append("path")
@@ -563,52 +742,49 @@ function updateAreaChart(data, SvgChart, y_axis_label, flip_y, eventsData, selec
   //adding axis labelså
   SvgChart.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgChart.append("text")
+    .attr("class", "axis-text")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
     .text(y_axis_label);
 
-    const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
-    const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
-  
-    eventOverlay.selectAll(".event-line")
-      .data(eventsData)
-      .enter()
-      .append("line")
-      .attr("class", "event-line")
-      .attr("id",(d) =>  "line-" +d.title)
-      .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-      .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-      .attr("y1", 0)
-      .attr("y2", INNER_HEIGHT)
-      .attr("stroke", SPOTIFY_GREEN)
-      .attr("stroke-width", 1);
-  
-    
-  
-    eventOverlay.selectAll(".event-dot")
-      .data(eventsData)
-      .enter()
-      .append("circle")
-      .attr("class", "event-dot")
-      .attr("id", (d) => "dot-" + d.title)
-      .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-      .attr("cy", 0)
-      .attr("r", 7)
-      .on("click", function (event, d) {
-        selections = handleEventClick(d, eventOverlay, selections, this, data)
-      })
+  const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
+  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
 
-  
-  
+  eventOverlay
+    .selectAll(".event-line")
+    .data(eventsData)
+    .enter()
+    .append("line")
+    .attr("class", "event-line")
+    .attr("id", (d) => "line-" + d.title)
+    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("y1", 0)
+    .attr("y2", INNER_HEIGHT)
+    .attr("stroke", SPOTIFY_GREEN)
+    .attr("stroke-width", 1);
+
+  eventOverlay
+    .selectAll(".event-dot")
+    .data(eventsData)
+    .enter()
+    .append("circle")
+    .attr("class", "event-dot")
+    .attr("id", (d) => "dot-" + d.title)
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
+    .attr("cy", 0)
+    .attr("r", 7)
+    .on("click", function (event, d) {
+      selections = handleEventClick(d, eventOverlay, selections, this, data);
+    });
 }
-
-
 
 /**
  * Updates the circle chart with data for a specified year.
@@ -635,7 +811,7 @@ function updateCircleChart(data, value) {
 
   circle_coors.forEach((pos) => {
     const emotionData = yearData.find((d) => d.label === pos.emotion);
-    const radius = 100 * emotionData.count;
+    const radius = 12 * Math.log(500 * emotionData.count);
     if (emotionData && emotionData.count > 0) {
       SvgCircle.append("circle")
         .attr("cx", pos.x)
@@ -724,7 +900,7 @@ async function lineChartProcessDataByMonth(data, dateStart, dateEnd) {
   console.log("Date range:", dateStart, dateEnd);
 
   // Filter data within the specified date range
-  const parseDate = d3.timeParse("%Y-%m-%d"); 
+  const parseDate = d3.timeParse("%Y-%m-%d");
   const filteredData = data.filter((d) => {
     const date = parseDate(d.date);
     return date >= dateStart && date <= dateEnd;
@@ -737,9 +913,9 @@ async function lineChartProcessDataByMonth(data, dateStart, dateEnd) {
     const date = new Date(d.date);
     date.setDate(date.getDate() + 1);
     const year = date.getFullYear();
-    const month = date.getMonth() + 1; 
+    const month = date.getMonth() + 1;
     const label = d.label;
-    const yearMonth = `${year}-${month.toString().padStart(2, '0')}`;
+    const yearMonth = `${year}-${month.toString().padStart(2, "0")}`;
 
     if (!emotionTotals[yearMonth]) {
       emotionTotals[yearMonth] = {
@@ -991,14 +1167,15 @@ function updateStackedBarChart(data, eventsData) {
   //adding axis labels
   SvgStackedBar.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
   SvgStackedBar.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
     .text("Proprtion of Music Type");
-
 }
