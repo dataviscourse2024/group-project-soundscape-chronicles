@@ -66,6 +66,7 @@ async function setup() {
 
   //stacked bar chart
   let stackBarChartData = await stackedBarChartProcessData(combinedData);
+  createSliderFoStackedBarChart(stackBarChartData);
   updateStackedBarChart(stackBarChartData, eventsData);
 
   //rank line chart
@@ -101,6 +102,58 @@ async function setup() {
       .attr("class", "color-box")
       .style("background-color", color);
     legendItem.append("span").text(key);
+  }
+
+  //legend - chatgpt helped with this
+  const circlelegendContainer = d3.select("#circle-legend");
+  const circlelegend = circlelegendContainer
+    .append("div")
+    .attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const circlelegendItem = circlelegend
+      .append("div")
+      .attr("class", "legend-item");
+    circlelegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    circlelegendItem.append("span").text(key);
+  }
+
+  //legend - chatgpt helped with this
+  const stackedlegendContainer = d3.select("#stacked-legend");
+  const stackedlegend = stackedlegendContainer
+    .append("div")
+    .attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const stackedlegendItem = stackedlegend
+      .append("div")
+      .attr("class", "legend-item");
+    stackedlegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    stackedlegendItem.append("span").text(key);
+  }
+
+  //legend - chatgpt helped with this
+  const arealegendContainer = d3.select("#area-legend");
+  const arealegend = arealegendContainer.append("div").attr("class", "legend");
+
+  for (const key of Object.keys(emotionColors)) {
+    const color = emotionColors[key];
+    const arealegendItem = arealegend
+      .append("div")
+      .attr("class", "legend-item");
+    arealegendItem
+      .append("div")
+      .attr("class", "color-box")
+      .style("background-color", color);
+    arealegendItem.append("span").text(key);
   }
 
   // Checkable legend
@@ -162,6 +215,25 @@ function createSliderForCircleChart(data) {
   slider.addEventListener("input", function () {
     document.getElementById("circle-label").innerText = this.value;
     updateCircleChart(data, this.value);
+  });
+}
+
+/**
+ * creating slider for stacked bar chart and adding listener for updates
+ * @param {Array} data - The data to update circle chart with
+ */
+function createSliderFoStackedBarChart(data) {
+  const years = data.map((d) => d.year);
+  let slider = document.getElementById("stackedbar-slider");
+  const min = Math.min(...years);
+  slider.min = min;
+  slider.max = Math.max(...years);
+  slider.value = min;
+  document.getElementById("stackedbar-label").innerText = min;
+  document.getElementById("stackedbar-slider").value = min;
+  slider.addEventListener("input", function () {
+    document.getElementById("stackedbar-label").innerText = this.value;
+    // updateStackedBarChart(data, this.value);
   });
 }
 
