@@ -19,6 +19,14 @@
         text-align: center;
         color: #1ed760;
       }
+      .row.chart {
+        display: flex;
+        flex-direction: column; /* Align items vertically */
+        align-items: center; /* Center items horizontally */
+        justify-content: center; /* Center items vertically */
+        text-align: center; /* Center text inside the elements */
+        margin: 20px 0; /* Optional: Add some margin for spacing */
+      }
 
       .chart h3 {
         max-width: 650px; /* Matches the width of the SVG */
@@ -149,7 +157,8 @@
       .checkable-legend {
         display: flex;
         flex-direction: column;
-        margin-left: 20px;
+        margin-left: -40px;
+        gap: 10px;
       }
 
       #checkable-legend-two {
@@ -159,7 +168,8 @@
       .checkable-legend-two {
         display: flex;
         flex-direction: column;
-        margin-left: 20px;
+        margin-left: -40px;
+        gap: 10px;
       }
       .close {
         color: #aaa;
@@ -181,6 +191,16 @@
       .event-dot-selected {
         fill: #88ebac;
       }
+      .video {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin: 20px 0; /* Optional: Add some margin for spacing */
+      }
+
+
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
@@ -192,7 +212,7 @@
     <h3>
       This project explores the relationship between historical events and music
       preferences, aiming to reveal how external events like elections,
-      pandemics, or social movements may impact the types of music people choose
+      catastrophes, or social changes may impact the types of music people choose
       to listen to. By analyzing changes in music preferences—particularly the
       prevalence of different emotional categories (e.g., sad, happy, calm,
       energetic)—we can gain insights into collective emotional trends during
@@ -202,14 +222,9 @@
     </h3>
     <h3>
       Click on one of the circles to read more about the historical event, when
-      you're finished, simply click the X on the text box, click on the circle
-      again, or click on another circle to continue reading.
+      you're finished, simply click the X on the text box or click on the circle
+      again.
     </h3>
-    <div class = "video">
-      <h2 id = "video header">About us</h2>
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/96eMRyBfKro?si=qVIYFJZSOkA04xjp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      <h3>Want to know more about our goals and features? watch this brief introduction video.</h3>
-    </div>
     <div class="row chart">
       <div class="chart">
         <h2 id="line-chart-header">Count of Each Emotion in Top 100</h2>
@@ -290,6 +305,17 @@
           over the bar.
         </h3>
       </div>
+    </div>
+    <h2>About the Developers</h2>
+    <h3>
+      Nicole Forrester is a double major in Applied Mathematics and Computer Science.
+      Karena Klinkenberg and Liv Bigelow are Data Science majors. All of us have a passion
+      for music and current events, and were interested in furthering our understanding
+      the intersection of historical phenomena and society's listening trends.
+    <div class = "video">
+      <h2 id = "video header">Project Milestone Screencast</h2>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/96eMRyBfKro?si=qVIYFJZSOkA04xjp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <h3>Want to know more about our goals and features? Watch this brief introduction video.</h3>
     </div>
     <div id="event-modal" class="modal">
       <div class="modal-content">
