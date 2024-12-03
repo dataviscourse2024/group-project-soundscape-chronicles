@@ -9,13 +9,16 @@ const INNER_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const ANIMATION_DUATION = 300;
 const SPOTIFY_GREEN = "#1ed760";
 let hideModalTimeout = 200;
-let selections = "NO";
+let selections;
+let rankSelections = "NO";
 let rawData = [];
 let originalLineChartData = [];
 let eventsData = [];
+let filteredEventsData = [];
 let isZoomedIn = false;
 let zoomedInData = [];
 let selectedEmotions;
+let selectedRankEmotions;
 let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
 
 const emotionColors = {
@@ -77,13 +80,12 @@ async function setup() {
 
   //rank line chart
   let rankLineData = await rankLineChartProcessData(combinedData);
-  updateLineChart(
+  updateRankLineChart(
     rankLineData,
     SvgRankLineChart,
     "Average Rank",
     (flip_y = true),
-    eventsData,
-    selections
+    eventsData 
   );
 
   //stacked area chart
@@ -162,7 +164,7 @@ async function setup() {
     arealegendItem.append("span").text(key);
   }
 
-  // Checkable legend
+  // Checkable legend for line chart
   const checkableLegendContainer = d3.select("#checkable-legend");
   const checkableLegend = checkableLegendContainer
     .append("div")
@@ -215,6 +217,7 @@ async function setup() {
   }
 
   selectedEmotions = Object.keys(emotionColors);
+  selectedRankEmotions = Object.keys(emotionColors);
 }
 
 /**
@@ -310,45 +313,44 @@ function updateSelectedEmotions(data, SvgChart, eventsData) {
   });
 
   const dataToFilter = isZoomedIn ? zoomedInData : data;
+  const eventsDataToDisplay = isZoomedIn ? filteredEventsData : eventsData;
 
   const filteredData = dataToFilter.filter((d) =>
     selectedEmotions.includes(d.label)
   );
+
   updateLineChart(
     filteredData,
     SvgChart,
     "Song Emotion Count",
     false,
-    eventsData,
+    eventsDataToDisplay,
     selections
   );
 }
 
 /**
  * Updates the line chart based on the selected emotions.
- * @function updateSelectedEmotions
+ * @function updateRankSelectedEmotions
  * @param {Array} data - The original data for the line chart.
- * @param {Object} SvgChart - The SVG element for the line chart.
+ * @param {Object} SvgRankChart - The SVG element for the line chart.
  * @param {Array} eventsData - The historical events data.
  */
-function updateRankSelectedEmotions(data, SvgChart, eventsData) {
-  selectedEmotions = Object.keys(emotionColors).filter((key) => {
+function updateRankSelectedEmotions(data, SvgRankChart, eventsData) {
+  selectedRankEmotions = Object.keys(emotionColors).filter((key) => {
     return d3.select(`#checkbox-two-${key}`).property("checked");
   });
 
-  const dataToFilter = isZoomedIn ? zoomedInData : data;
-
-  const filteredData = dataToFilter.filter((d) =>
-    selectedEmotions.includes(d.label)
+  const filteredData = data.filter((d) =>
+    selectedRankEmotions.includes(d.label)
   );
 
-  updateLineChart(
+  updateRankLineChart(
     filteredData,
-    SvgChart,
+    SvgRankChart,
     "Average Rank",
     (flip_y = true),
-    eventsData,
-    selections
+    eventsData 
   );
 }
 
@@ -365,17 +367,17 @@ async function handleEventClick(
   combinedData,
   eventsData
 ) {
-  if (selections == element) {
+  if (selections === eventData.title) {
     //deselct everything
-    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    svg.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
     hideModal();
     isZoomedIn = false;
-    d3.selectAll(".event-line").attr("display", null);
-    d3.selectAll(".event-dot").attr("display", null);
+    svg.selectAll(".event-line").attr("display", null);
+    svg.selectAll(".event-dot").attr("display", null);
     return "no";
   } else {
     //deselct everything
-    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    svg.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
     hideModal();
 
     //select the clicked element
@@ -403,14 +405,15 @@ async function handleEventClick(
     zoomedInData = monthlyData;
 
     // Hide all event lines and dots other than the current event
-    d3.selectAll(".event-line").attr("display", "none");
-    d3.selectAll(".event-dot").attr("display", "none");
-    d3.select(`#line-${CSS.escape(eventData.title)}`).attr("display", null);
-    d3.select(`#dot-${CSS.escape(eventData.title)}`).attr("display", null);
-    const filteredEventsData = eventsData.filter(
+    svg.selectAll(".event-line").attr("display", "none");
+    svg.selectAll(".event-dot").attr("display", "none");
+    svg.select(`#line-${CSS.escape(eventData.title)}`).attr("display", null);
+    svg.select(`#dot-${CSS.escape(eventData.title)}`).attr("display", null);
+    filteredEventsData = eventsData.filter(
       (d) => d.title === eventData.title
     );
 
+    selections = eventData.title;
     // Redraw the chart with the processed monthly data
     updateLineChart(
       filteredMonthlyData,
@@ -421,7 +424,7 @@ async function handleEventClick(
       selections
     );
 
-    return element;
+    return eventData.title;
   }
 }
 
@@ -480,14 +483,10 @@ function updateLineChart(
   SvgChart.append("g")
     .attr("transform", "translate(0," + INNER_HEIGHT + " )")
     .attr("class", "xAxis")
-    .transition()
-    .duration(1000)
     .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
 
   SvgChart.append("g")
     .attr("class", "yAxis")
-    .transition()
-    .duration(1000)
     .call(d3.axisLeft(yScale));
 
   SvgChart.select(".xAxis path").attr("stroke", "white");
@@ -512,9 +511,6 @@ function updateLineChart(
       .attr("d", lineGenerator)
       .attr("opacity", 1)
       .merge(linePath)
-      .transition()
-      .duration(1000)
-      .ease(d3.easeLinear)
       .attr("d", lineGenerator);
 
     // Remove old lines
@@ -551,10 +547,7 @@ function updateLineChart(
     .attr("y1", 0)
     .attr("y2", INNER_HEIGHT)
     .attr("stroke", SPOTIFY_GREEN)
-    .attr("stroke-width", 1)
-    .transition()
-    .duration(1000)
-    .attr("y2", INNER_HEIGHT);
+    .attr("stroke-width", 1);
 
   eventOverlay
     .selectAll(".event-dot")
@@ -575,10 +568,10 @@ function updateLineChart(
         data,
         eventsData
       );
-    })
-    .transition()
-    .duration(1000);
+    });
 }
+
+
 /**
  * Shows the event modal with a title, description, and positions it relative to the mouse.
  * @function showModal
@@ -627,7 +620,6 @@ function showModal(title, description, selections) {
   const closeButton = modal.querySelector(".close"); // Assuming there's a close button in the modal
   closeButton.addEventListener("click", function () {
     // Change class of all D3 elements with class 'a' to class 'b'
-    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
     selections = "no";
     modal.style.display = "none"; // Hide the modal
   });
@@ -654,6 +646,239 @@ function hideModal() {
     eventsData,
     selections
   );
+}
+
+/**
+ * Shows the rank event modal with a title and description.
+ * @function showRankModal
+ * @param {string} title - The title to display in the modal.
+ * @param {string} description - The description to display in the modal.
+ */
+function showRankModal(title, description) {
+  const modal = document.getElementById("rank-event-modal");
+
+  // Set modal content
+  modal.querySelector(".modal-title").textContent = title;
+  modal.querySelector(".modal-body").textContent = description;
+
+  // Get the mouse position (clientX, clientY are relative to the viewport)
+  const mouseX = window.event.clientX + window.pageXOffset; // Adjust for scrolling horizontally
+  const mouseY = window.event.clientY + window.pageYOffset; // Adjust for scrolling vertically
+
+  // Calculate modal position with a buffer
+  const buffer = -250; // Space between the mouse pointer and the modal
+  let modalLeft = mouseX + buffer - 150;
+  let modalTop = mouseY + buffer - 160;
+
+  // Prevent modal from going off the screen (adjust boundaries)
+  const modalWidth = modal.offsetWidth;
+  const modalHeight = modal.offsetHeight;
+
+  // Check if the modal would go off the right side of the screen
+  if (modalLeft + modalWidth > window.innerWidth + window.pageXOffset) {
+    modalLeft = mouseX - modalWidth - buffer; // Move modal to the left of the pointer
+  }
+
+  // Check if the modal would go off the bottom of the screen
+  if (modalTop + modalHeight > window.innerHeight + window.pageYOffset) {
+    modalTop = mouseY - modalHeight - buffer; // Move modal above the pointer
+  }
+
+  // Apply calculated position
+  modal.style.left = `${modalLeft}px`;
+  modal.style.top = `${modalTop}px`;
+  modal.style.position = "absolute";
+
+  // Show the modal
+  modal.style.display = "block";
+
+  // Add event listener to close the modal
+  const closeButton = modal.querySelector(".close"); // Assuming there's a close button in the modal
+  closeButton.addEventListener("click", function () {
+    // Change class of all D3 elements with class 'a' to class 'b'
+    rankSelections = "no";
+    d3.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    modal.style.display = "none"; // Hide the modal
+  });
+}
+
+/**
+ * Hides the rank event modal.
+ * @function hideRankModal
+ */
+function hideRankModal() {
+  const modal = document.getElementById("rank-event-modal");
+  modal.style.display = "none";
+}
+
+/**
+ * Updates the rank line chart with provided data.
+ * @function updateRankLineChart
+ * @param {Array} data - The data to display in the rank line chart.
+ * @param {Object} SvgRankChart - The SVG element for the rank line chart.
+ * @param {string} y_axis_label - Label for the y-axis.
+ * @param {boolean} flip_y - Whether to invert the y-axis scale.
+ * @param {Array} eventsData - The historical events data.
+ * @param {Object} selections - The selections object.
+ */
+function updateRankLineChart(
+  data,
+  SvgRankChart,
+  y_axis_label,
+  flip_y,
+  eventsData
+) {
+  // Create scales
+  let xScale = d3
+    .scalePoint()
+    .domain(data.map((d) => d.year))
+    .range([0, INNER_WIDTH]);
+
+  let yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.count)])
+      .range([0, INNER_HEIGHT]);
+  
+
+  const lineGenerator = d3
+    .line()
+    .x((d) => xScale(d.year))
+    .y((d) => yScale(d.count));
+
+  SvgRankChart.selectAll("*").remove();
+
+  SvgRankChart.append("g")
+    .attr("transform", "translate(0," + INNER_HEIGHT + " )")
+    .attr("class", "xAxis")
+    .call(d3.axisBottom(xScale).ticks(data.length).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
+
+  SvgRankChart.append("g")
+    .attr("class", "yAxis")
+    .call(d3.axisLeft(yScale));
+
+  SvgRankChart.select(".xAxis path").attr("stroke", "white");
+  SvgRankChart.selectAll(".xAxis .tick line").attr("stroke", "white");
+  SvgRankChart.select(".yAxis path").attr("stroke", "white");
+  SvgRankChart.selectAll(".yAxis .tick line").attr("stroke", "white");
+
+  for (const emotion of Object.keys(emotionColors)) {
+    const emotionData = data.filter((d) => d.label === emotion);
+
+    let linePath = SvgRankChart.selectAll(`.line-${emotion}`)
+      .data([emotionData]);
+
+    // Enter new lines
+    linePath.enter()
+      .append("path")
+      .attr("class", `line line-${emotion}`)
+      .attr("fill", "none")
+      .attr("stroke", emotionColors[emotion])
+      .attr("stroke-width", 1.5)
+      .attr("d", lineGenerator)
+      .attr("opacity", 1)
+      .merge(linePath)
+      .attr("d", lineGenerator);
+
+    // Remove old lines
+    linePath.exit().remove();
+  }
+
+  const eventOverlay = SvgRankChart.append("g").attr("class", "event-overlay");
+
+  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
+
+  eventOverlay.selectAll(".event-line")
+    .data(eventsData)
+    .enter()
+    .append("line")
+    .attr("class", "event-line")
+    .attr("id", (d) => `line-${CSS.escape(d.title)}`)
+    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("y1", 0)
+    .attr("y2", INNER_HEIGHT)
+    .attr("stroke", SPOTIFY_GREEN)
+    .attr("stroke-width", 1);
+
+  eventOverlay.selectAll(".event-dot")
+    .data(eventsData)
+    .enter()
+    .append("circle")
+    .attr("class", (d) => d.title === rankSelections ? "event-dot-selected" : "event-dot")
+    .attr("id", (d) => `dot-${CSS.escape(d.title)}`)
+    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)) + (d.date.getMonth() * yearWidth / 12))
+    .attr("cy", 0)
+    .attr("r", (d) => d.title === rankSelections ? 20 : 7) 
+    .on("click", async function (event, d) {
+      selectedRankEmotions = Object.keys(emotionColors).filter(key => {
+        return d3.select(`#checkbox-two-${key}`).property("checked");
+      });
+      await handleRankEventClick(d, SvgRankChart, this, data, eventsData, selectedRankEmotions);
+    });
+  
+  // Add axis labels
+  SvgRankChart.append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", INNER_WIDTH / 2)
+    .attr("y", INNER_HEIGHT + MARGIN.bottom)
+    .text("Year");
+
+  SvgRankChart.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -(INNER_HEIGHT / 2))
+    .attr("y", -45)
+    .text(y_axis_label);
+}
+
+/**
+ * Updates the rank line chart based on the selected emotions.
+ * @function updateRankSelectedEmotions
+ * @param {Array} data - The original data for the rank line chart.
+ * @param {Object} SvgChart - The SVG element for the rank line chart.
+ * @param {Array} eventsData - The historical events data.
+ */
+function updateRankSelectedEmotions(data, SvgChart, eventsData) {
+  selectedRankEmotions = Object.keys(emotionColors).filter((key) => {
+    return d3.select(`#checkbox-two-${key}`).property("checked");
+  });
+
+  const filteredData = data.filter((d) =>
+    selectedRankEmotions.includes(d.label)
+  );
+
+  updateRankLineChart(
+    filteredData,
+    SvgChart,
+    "Average Rank",
+    (flip_y = true),
+    eventsData
+  );
+}
+
+/**
+ * This function contains all of the logic necessary for clicking on a historical event in the rank line chart.
+ * @param {*} element the svg element being clicked
+ * @param {*} eventData the data of the svg element.
+ */
+async function handleRankEventClick(eventData, svg, element, combinedData, eventsData, selectedEmotions) {
+  if (rankSelections === element.__data__.title) {
+    // Deselect everything
+    svg.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    hideRankModal();
+    rankSelections = "no";
+
+  } else {
+    // Deselect everything
+    svg.selectAll(".event-dot-selected").attr("class", "event-dot").attr("r", 7);
+    hideRankModal();
+
+    // Select the clicked element
+    d3.select(element).attr("class", "event-dot-selected").attr("r", 20);
+    showRankModal(eventData.title, eventData.description);
+
+    rankSelections = element.__data__.title;
+  }
 }
 
 /**
