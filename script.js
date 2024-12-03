@@ -19,7 +19,7 @@ let isZoomedIn = false;
 let zoomedInData = [];
 let selectedEmotions;
 let selectedRankEmotions;
-let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar, SvgAreaChart;
+let SvgLineChart, SvgRankLineChart, SvgCircle, SvgStackedBar;
 
 const emotionColors = {
   happy: "#D55E00",
@@ -47,9 +47,6 @@ async function setup() {
 
   //Stackedbar-div
   SvgStackedBar = createChartSVG("#Stackedbar-div");
-
-  //AreaChart-div
-  SvgAreaChart = createChartSVG("#AreaChart-div");
 
   let combinedData = await loadData();
   eventsData = await loadEventData();
@@ -86,16 +83,6 @@ async function setup() {
     "Average Rank",
     (flip_y = true),
     eventsData 
-  );
-
-  //stacked area chart
-  updateAreaChart(
-    lineChartData,
-    SvgAreaChart,
-    "Song Emotion Count",
-    false,
-    eventsData,
-    selections
   );
 
   //legend - chatgpt helped with this
@@ -146,22 +133,6 @@ async function setup() {
       .attr("class", "color-box")
       .style("background-color", color);
     stackedlegendItem.append("span").text(key);
-  }
-
-  //legend - chatgpt helped with this
-  const arealegendContainer = d3.select("#area-legend");
-  const arealegend = arealegendContainer.append("div").attr("class", "legend");
-
-  for (const key of Object.keys(emotionColors)) {
-    const color = emotionColors[key];
-    const arealegendItem = arealegend
-      .append("div")
-      .attr("class", "legend-item");
-    arealegendItem
-      .append("div")
-      .attr("class", "color-box")
-      .style("background-color", color);
-    arealegendItem.append("span").text(key);
   }
 
   // Checkable legend for line chart
@@ -881,135 +852,6 @@ async function handleRankEventClick(eventData, svg, element, combinedData, event
   }
 }
 
-/**
- * Updates an area chart with provided data.
- * @function updateAreaChart
- * @param {Array} data - The data to display in the line chart.
- * @param {Object} SvgChart - The SVG element for the line chart.
- * @param {string} y_axis_label - Label for the y-axis.
- * @param {boolean} flip_y - Whether to invert the y-axis scale.
- */
-function updateAreaChart(
-  data,
-  SvgChart,
-  y_axis_label,
-  flip_y,
-  eventsData,
-  selections
-) {
-  //https://d3-graph-gallery.com/graph/line_basic.html
-
-  //copilot helped me with this
-  let xScale = d3
-    .scalePoint()
-    .domain(data.map((d) => d.year))
-    .range([0, INNER_WIDTH]);
-
-  let sum = data[0].count;
-  let FirstEmote = data[0].label;
-  let tempEmote = "";
-  let i = 1;
-  while (FirstEmote != tempEmote) {
-    sum = sum + data[i].count;
-    tempEmote = data[i + 1].label;
-    i = i + 1;
-  }
-
-  //copilot helped me with this
-  let yScale;
-  if (flip_y) {
-    yScale = d3.scaleLinear().domain([0, sum]).range([0, INNER_HEIGHT]);
-  } else {
-    yScale = d3.scaleLinear().domain([0, sum]).range([INNER_HEIGHT, 0]);
-  }
-
-  const cumulativeY = Array(data.length).fill(0);
-  const minYear = d3.min(data, (d) => d.year);
-
-  const areaGenerator = d3
-    .area()
-    .x((d) => xScale(d.year))
-    .y0((d, i) => yScale(cumulativeY[d.year - minYear])) // Use cumulative y for y0
-    .y1((d, i) => yScale(cumulativeY[d.year - minYear] + d.count)); // Stack current count on top
-
-  SvgChart.selectAll("*").remove();
-
-  //apending axis
-  SvgChart.append("g")
-    .attr("transform", "translate(0," + INNER_HEIGHT + " )")
-    .attr("class", "xAxis")
-    .call(d3.axisBottom(xScale).tickFormat((d, i) => (i % 2 === 0 ? d : "")));
-
-  SvgChart.select(".xAxis path").attr("stroke", "white");
-
-  SvgChart.selectAll(".xAxis .tick line").attr("stroke", "white");
-
-  SvgChart.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
-
-  SvgChart.select(".yAxis path").attr("stroke", "white");
-
-  SvgChart.selectAll(".yAxis .tick line").attr("stroke", "white");
-
-  console.log(data);
-  //copilot helped me with this
-  for (const emotion of Object.keys(emotionColors)) {
-    const emotionData = data.filter((d) => d.label === emotion);
-
-    //creating line
-    SvgChart.append("path")
-      .datum(emotionData)
-      .attr("fill", emotionColors[emotion])
-      .attr("d", areaGenerator(emotionData));
-    // Update cumulative values
-    emotionData.forEach((d, i) => (cumulativeY[d.year - minYear] += d.count));
-  }
-
-  //adding axis labelså
-  SvgChart.append("text")
-    .attr("text-anchor", "middle")
-    .attr("class", "axis-text")
-    .attr("x", INNER_WIDTH / 2)
-    .attr("y", INNER_HEIGHT + MARGIN.bottom)
-    .text("Year");
-  SvgChart.append("text")
-    .attr("class", "axis-text")
-    .attr("text-anchor", "middle")
-    .attr("transform", "rotate(-90)")
-    .attr("x", -(INNER_HEIGHT / 2))
-    .attr("y", -45)
-    .text(y_axis_label);
-
-  const eventOverlay = SvgChart.append("g").attr("class", "event-overlay");
-  const yearWidth = INNER_WIDTH / (data.length - 1); // Width of each year segment
-
-  eventOverlay
-    .selectAll(".event-line")
-    .data(eventsData)
-    .enter()
-    .append("line")
-    .attr("class", "event-line")
-    .attr("id", (d) => "line-" + d.title)
-    .attr("x1", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("x2", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("y1", 0)
-    .attr("y2", INNER_HEIGHT)
-    .attr("stroke", SPOTIFY_GREEN)
-    .attr("stroke-width", 1);
-
-  eventOverlay
-    .selectAll(".event-dot")
-    .data(eventsData)
-    .enter()
-    .append("circle")
-    .attr("class", "event-dot")
-    .attr("id", (d) => "dot-" + d.title)
-    .attr("cx", (d) => xScale(d3.timeFormat("%Y")(d.date)))
-    .attr("cy", 0)
-    .attr("r", 7)
-    .on("click", function (event, d) {
-      selections = handleEventClick(d, eventOverlay, selections, this, data);
-    });
-}
 
 /**
  * Updates the circle chart with data for a specified year.
