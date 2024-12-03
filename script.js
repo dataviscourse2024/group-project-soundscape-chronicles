@@ -707,7 +707,7 @@ function updateRankLineChart(
 
   let yScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.count)])
+      .domain([30, d3.max(data, (d) => d.count)])
       .range([0, INNER_HEIGHT]);
   
 
@@ -790,12 +790,14 @@ function updateRankLineChart(
   // Add axis labels
   SvgRankChart.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("x", INNER_WIDTH / 2)
     .attr("y", INNER_HEIGHT + MARGIN.bottom)
     .text("Year");
 
   SvgRankChart.append("text")
     .attr("text-anchor", "middle")
+    .attr("class", "axis-text")
     .attr("transform", "rotate(-90)")
     .attr("x", -(INNER_HEIGHT / 2))
     .attr("y", -45)
