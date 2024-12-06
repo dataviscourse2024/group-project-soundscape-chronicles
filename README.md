@@ -72,8 +72,7 @@ Checkable Legends: The legends next to the charts allow users to filter the data
 ## How to Run
 
 1. Clone the repository.
-2. Open index.html in a web browser to view the visualizations.
-3. Run cleanUpData.py to preprocess the data if needed.
+2. Open index.html with Live Web Server or another localhost server method to view the visualizations.
 
 OR click on Github Pages Link [SoundScape Chronicles](https://dataviscourse2024.github.io/group-project-soundscape-chronicles/)
 
