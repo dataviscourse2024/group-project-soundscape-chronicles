@@ -80,5 +80,7 @@ OR click on Github Pages Link [SoundScape Chronicles](https://dataviscourse2024.
 ## Contributers
 
 Nicole Forrester: Applied Mathematics and Computer Science major.
+
 Karena Klinkenberg: Data Science major.
+
 Liv Bigelow: Data Science major.
