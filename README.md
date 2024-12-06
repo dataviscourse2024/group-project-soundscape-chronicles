@@ -35,31 +35,38 @@ Screencast Video: [Project Milestone Screencast](https://youtu.be/96eMRyBfKro)
 #### Line Chart
 
 Description: Shows the total number of songs for each of the given emotions that appear in the Billboard Top 100 for each year.
+
 Interaction: Click on events to zoom in and see detailed data for a specific time range.
 
 #### Rank Line Chart
 
 Description: Displays the average ranking of songs belonging to each emotion in the Billboard Top 100 by year.
+
 Interaction: Click through different emotions to observe the stability of the average rank.
 
 #### Circle Chart
 
 Description: Represents the log number of songs for each emotion that appear in the Top 100 for a given year.
+
 Interaction: Use the slider to observe changes in trends year by year.
 
 #### Stacked Bar Chart
 
 Description: Shows the proportion of songs for each emotion that appear in the Top 100 for each year.
+
 Interaction: Hover over the bars to see detailed numbers.
 
 #### Event Modals
 
 Description: Clicking on a historical event displays a modal with detailed information about the event.
+
 Interaction: Click the close button or the event circle again to hide the modal.
 
 ## Non-Obvious Features
 
 Zooming In on Events: Clicking on a historical event in the line chart zooms in to show data for a specific time range around the event.
+
+
 Checkable Legends: The legends next to the charts allow users to filter the data by selecting or deselecting emotions.
 
 ## How to Run
