@@ -26,9 +26,9 @@ CSV and JSON: Standard libraries for handling CSV and JSON data in Python.
 
 ### URLS
 
-Project Website: SoundScape Chronicles
+Project Website: [SoundScape Chronicles](https://dataviscourse2024.github.io/group-project-soundscape-chronicles/)
 
-Screencast Video: Project Milestone Screencast
+Screencast Video: [Project Milestone Screencast](https://youtu.be/96eMRyBfKro)
 
 ### Features
 
@@ -68,7 +68,7 @@ Checkable Legends: The legends next to the charts allow users to filter the data
 2. Open index.html in a web browser to view the visualizations.
 3. Run cleanUpData.py to preprocess the data if needed.
 
-OR click on Github Pages Link
+OR click on Github Pages Link [SoundScape Chronicles](https://dataviscourse2024.github.io/group-project-soundscape-chronicles/)
 
 ## Contributers
 
